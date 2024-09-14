@@ -9,9 +9,16 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.StudentHelperBot.controller.StudentHelperBot.*;
-import static com.example.StudentHelperBot.service.impl.UpdateProducerImpl.*;
+import static com.example.StudentHelperBot.service.impl.UpdateProducerImpl.PHOTO_MESSAGE_UPDATE;
+import static com.example.StudentHelperBot.service.impl.UpdateProducerImpl.TEXT_MESSAGE_UPDATE;
 
 @Component
 public class UpdateController {
@@ -89,12 +96,54 @@ public class UpdateController {
         studentHelperBot.sendAnswerMessage(sendMessage);
     }
 
+    // работает, и слава Богу
+    public void sendInlineKeyboard(Update update) {
+        try {
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = getRows();
+
+            // Устанавливаем кнопки в markup
+            markup.setKeyboard(rows);
+
+            // Создаем сообщение
+            SendMessage message = new SendMessage();
+            message.setChatId(update.getMessage().getChatId());
+            message.setText("Выберите что хотите сделать:");
+            message.setReplyMarkup(markup);
+
+            // Отправляем сообщение
+            studentHelperBot.execute(message);
+
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
+        }
+    }
+
+    private List<List<InlineKeyboardButton>> getRows() {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        // Создаем первую строку с кнопками
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Сохранить"); // Текст на кнопке
+        button1.setCallbackData("callback_data_save"); // Данные для обратного вызова
+        row1.add(button1);
+
+        InlineKeyboardButton button2 = new InlineKeyboardButton();
+        button2.setText("Конвертировать");
+        button2.setCallbackData("callback_data_convert");
+        row1.add(button2);
+
+        rows.add(row1);
+        return rows;
+    }
+
     private void processPhotoMessage(Update update) {
         updateProducer.produce(PHOTO_MESSAGE_UPDATE, update);
     }
 
     private void processDocMessage(Update update) {
-        updateProducer.produce(DOC_MESSAGE_UPDATE, update);
+        sendInlineKeyboard(update);
         setFileIsReceivedView(update);
     }
 
@@ -104,7 +153,7 @@ public class UpdateController {
             case START -> setStartView(update);
             case UPLOAD_FILE -> setFileIsReceivedView(update);
             case HELP -> setHelpView(update);
-            default -> updateProducer.produce(message, update);
+            default -> updateProducer.produce(TEXT_MESSAGE_UPDATE, update);
         }
     }
 }

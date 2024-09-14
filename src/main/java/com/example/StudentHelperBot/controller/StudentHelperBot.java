@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -53,7 +54,17 @@ public class StudentHelperBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        updateController.processUpdate(update);
+        if (update.hasCallbackQuery()) {
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+            String data = callbackQuery.getData();
+            if (data.equals("callback_data_save")) {
+                log.info("callback_data_save");
+            } else if (data.equals("callback_data_convert")) {
+                log.info("callback_data_convert");
+            }
+        } else {
+            updateController.processUpdate(update);
+        }
     }
 
     @Override
@@ -66,7 +77,7 @@ public class StudentHelperBot extends TelegramLongPollingBot {
             try {
                 execute(message);
             } catch (TelegramApiException exception) {
-                log.error("Не удалось отправить сообщение...");
+                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
             }
         }
     }
