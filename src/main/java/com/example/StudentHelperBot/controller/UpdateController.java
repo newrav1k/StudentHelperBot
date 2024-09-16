@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -23,6 +24,9 @@ import static com.example.StudentHelperBot.service.impl.UpdateProducerImpl.TEXT_
 @Component
 public class UpdateController {
     private static final Logger log = LogManager.getLogger(UpdateController.class);
+
+    private static final String CALLBACK_DATA_SAVE = "callback_data_save";
+    private static final String CALLBACK_DATA_CONVERT = "callback_data_convert";
 
     private StudentHelperBot studentHelperBot;
     private final MessageUtils messageUtils;
@@ -44,10 +48,22 @@ public class UpdateController {
             log.error("Объект не может быть null");
             return;
         }
-        if (update.getMessage() != null) {
+        if (update.hasCallbackQuery()) {
+            distributeCallbackDataMessage(update);
+        } else if (update.getMessage() != null) {
             distributeMessageByType(update);
         } else {
             log.error("Неизвестный тип сообщения {}", update);
+        }
+    }
+
+    private void distributeCallbackDataMessage(Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+        if (data.equals(CALLBACK_DATA_SAVE)) {
+            log.info("callback_data_save");
+        } else if (data.equals(CALLBACK_DATA_CONVERT)) {
+            log.info("callback_data_convert");
         }
     }
 
@@ -71,8 +87,8 @@ public class UpdateController {
     }
 
     private void setStartView(Update update) {
-        String message = String.format("Привет, %s! Я телеграмм-бот, созданный группой замечательных людей\n" +
-                "Для ознакомления с уже доступным функционалом введите /help", update.getMessage().getChat().getFirstName());
+        String message = String.format("Привет, %s! Я — телеграм-бот, созданный командой талантливых людей. " +
+                "Чтобы узнать, какие функции уже доступны, введите команду /help.", update.getMessage().getChat().getFirstName());
         SendMessage sendMessage = messageUtils.generateSendMessageWithText(update, message);
         setView(sendMessage);
     }
@@ -144,7 +160,6 @@ public class UpdateController {
 
     private void processDocMessage(Update update) {
         sendInlineKeyboard(update);
-        setFileIsReceivedView(update);
     }
 
     private void processTextMessage(Update update) {
