@@ -27,11 +27,13 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     @Value("${bot.name}")
     private String botName;
 
+    private final Regulator regulator;
     private final UpdateController updateController;
 
-    public StudentHelperBot(@Value("${bot.token}") String botToken, UpdateController updateController) {
+    public StudentHelperBot(@Value("${bot.token}") String botToken, UpdateController updateController, Regulator regulator) {
         super(botToken);
         this.updateController = updateController;
+        this.regulator = regulator;
 
         // работает, но бот сосёт огромный хуй Айдара
         List<BotCommand> botCommands = new ArrayList<>() {{
@@ -48,12 +50,12 @@ public class StudentHelperBot extends TelegramLongPollingBot {
 
     @PostConstruct
     public void init() {
-        updateController.registerBot(this);
+        updateController.init(this);
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        updateController.processUpdate(update);
+        regulator.processUpdate(update);
     }
 
     @Override
