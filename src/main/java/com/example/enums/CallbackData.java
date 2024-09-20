@@ -1,4 +1,4 @@
-package com.example.StudentHelperBot.enums;
+package com.example.enums;
 
 import java.util.HashMap;
 

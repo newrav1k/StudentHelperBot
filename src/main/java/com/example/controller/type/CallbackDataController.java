@@ -1,8 +1,8 @@
-package com.example.StudentHelperBot.controller.type;
+package com.example.controller.type;
 
-import com.example.StudentHelperBot.controller.StudentHelperBot;
-import com.example.StudentHelperBot.controller.UpdateController;
-import com.example.StudentHelperBot.enums.CallbackData;
+import com.example.controller.StudentHelperBot;
+import com.example.controller.UpdateController;
+import com.example.enums.CallbackData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,7 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Service
 @Repository
-@Qualifier("CallbackDataController")
+@Qualifier("callbackDataController")
 public class CallbackDataController implements UpdateController {
     private static final Logger log = LoggerFactory.getLogger(CallbackDataController.class);
 
@@ -55,6 +55,6 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void cancelProcess(Update update) {
-        log.info(update.getCallbackQuery().getData());
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка отмены"));
     }
 }

@@ -1,4 +1,4 @@
-package com.example.StudentHelperBot.controller;
+package com.example.controller;
 
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;

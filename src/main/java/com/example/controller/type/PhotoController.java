@@ -1,7 +1,7 @@
-package com.example.StudentHelperBot.controller.type;
+package com.example.controller.type;
 
-import com.example.StudentHelperBot.controller.StudentHelperBot;
-import com.example.StudentHelperBot.controller.UpdateController;
+import com.example.controller.StudentHelperBot;
+import com.example.controller.UpdateController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,15 +12,15 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Service
 @Repository
-@Qualifier("DocumentController")
-public class DocumentController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
+@Qualifier("photoController")
+public class PhotoController implements UpdateController {
+    private static final Logger log = LoggerFactory.getLogger(PhotoController.class);
 
     private StudentHelperBot studentHelperBot;
 
     @Override
     public void processUpdate(Update update) {
-        setView(messageUtils.generateSendMessageForDocumentTypeMessage(update));
+        setView(messageUtils.generateSendMessageWithText(update, "Фотография получена..."));
     }
 
     @Override

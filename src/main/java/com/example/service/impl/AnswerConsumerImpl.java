@@ -1,6 +1,6 @@
-package com.example.StudentHelperBot.service.impl;
+package com.example.service.impl;
 
-import com.example.StudentHelperBot.service.AnswerConsumer;
+import com.example.service.AnswerConsumer;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 

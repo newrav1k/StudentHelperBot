@@ -1,6 +1,6 @@
-package com.example.StudentHelperBot.service.impl;
+package com.example.service.impl;
 
-import com.example.StudentHelperBot.service.UpdateProducer;
+import com.example.service.UpdateProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
-package com.example.StudentHelperBot.controller;
+package com.example.controller;
 
-import com.example.StudentHelperBot.utils.MessageUtils;
+import com.example.utils.MessageUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 

@@ -1,10 +1,10 @@
-package com.example.StudentHelperBot.controller;
+package com.example.controller;
 
-import com.example.StudentHelperBot.controller.type.CallbackDataController;
-import com.example.StudentHelperBot.controller.type.DocumentController;
-import com.example.StudentHelperBot.controller.type.PhotoController;
-import com.example.StudentHelperBot.controller.type.TextController;
-import com.example.StudentHelperBot.utils.MessageUtils;
+import com.example.controller.type.CallbackDataController;
+import com.example.controller.type.DocumentController;
+import com.example.controller.type.PhotoController;
+import com.example.controller.type.TextController;
+import com.example.utils.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

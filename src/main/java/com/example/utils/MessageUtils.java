@@ -1,4 +1,4 @@
-package com.example.StudentHelperBot.utils;
+package com.example.utils;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -57,7 +57,15 @@ public class MessageUtils {
         button2.setCallbackData("callback_data_convert");
         row1.add(button2);
 
+        // Создаем вторую строку с кнопками
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton button3 = new InlineKeyboardButton();
+        button3.setText("Отмена");
+        button3.setCallbackData("callback_data_cancel");
+        row2.add(button3);
+
         rows.add(row1);
+        rows.add(row2);
         return rows;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.StudentHelperBot.database;
+package com.example.database;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

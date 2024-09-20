@@ -1,4 +1,4 @@
-package com.example.StudentHelperBot.service;
+package com.example.service;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
