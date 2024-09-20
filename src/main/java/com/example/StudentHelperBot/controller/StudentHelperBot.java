@@ -3,6 +3,7 @@ package com.example.StudentHelperBot.controller;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -27,13 +28,14 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     @Value("${bot.name}")
     private String botName;
 
-    private final Regulator regulator;
-    private final UpdateController updateController;
+    @Autowired
+    private final List<UpdateController> updateController;
+    private final ProcessController processController;
 
-    public StudentHelperBot(@Value("${bot.token}") String botToken, UpdateController updateController, Regulator regulator) {
+    public StudentHelperBot(@Value("${bot.token}") String botToken, List<UpdateController> updateController, ProcessController processController) {
         super(botToken);
         this.updateController = updateController;
-        this.regulator = regulator;
+        this.processController = processController;
 
         // работает, но бот сосёт огромный хуй Айдара
         List<BotCommand> botCommands = new ArrayList<>() {{
@@ -50,12 +52,14 @@ public class StudentHelperBot extends TelegramLongPollingBot {
 
     @PostConstruct
     public void init() {
-        updateController.init(this);
+        for (var controller : updateController) {
+            controller.init(this);
+        }
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        regulator.processUpdate(update);
+        processController.processUpdate(update);
     }
 
     @Override

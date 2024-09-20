@@ -12,18 +12,9 @@ import java.util.List;
 
 @Component
 public class MessageUtils {
-    public SendMessage generateSendMessageWithText(Update update, String text, boolean isCallbackData) {
-        return isCallbackData ? generateForCallbackData(update, text) : generateForUsualMessage(update, text);
-    }
-
-    private SendMessage generateForCallbackData(Update update, String text) {
-        return new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), text);
-    }
-
-    private SendMessage generateForUsualMessage(Update update, String text) {
-        Message message = update.getMessage();
+    public SendMessage generateSendMessageWithCallbackData(Update update, String text) {
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId());
+        sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
         sendMessage.setText(text);
         return sendMessage;
     }

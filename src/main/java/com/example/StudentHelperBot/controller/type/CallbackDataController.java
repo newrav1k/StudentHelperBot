@@ -4,12 +4,16 @@ import com.example.StudentHelperBot.controller.StudentHelperBot;
 import com.example.StudentHelperBot.controller.UpdateController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-@Component
+@Service
+@Repository
+@Qualifier("CallbackDataController")
 public class CallbackDataController implements UpdateController {
     private static final Logger log = LoggerFactory.getLogger(CallbackDataController.class);
 
@@ -43,11 +47,11 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void saveProcess(Update update) {
-        log.info(update.getCallbackQuery().getData());
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка сохранения"));
     }
 
     private void convertProcess(Update update) {
-        log.info(update.getCallbackQuery().getData());
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка конвертации"));
     }
 
     private void deleteProcess(Update update) {

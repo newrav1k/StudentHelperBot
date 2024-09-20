@@ -1,6 +1,10 @@
 package com.example.StudentHelperBot.configuration;
 
 import com.example.StudentHelperBot.controller.StudentHelperBot;
+import com.example.StudentHelperBot.controller.type.CallbackDataController;
+import com.example.StudentHelperBot.controller.type.DocumentController;
+import com.example.StudentHelperBot.controller.type.PhotoController;
+import com.example.StudentHelperBot.controller.type.TextController;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -22,5 +26,25 @@ public class StudentHelperBotConfiguration {
             log.error("Ошибка при подключении бота");
         }
         return telegramBotsApi;
+    }
+
+    @Bean
+    public CallbackDataController callbackDataController() {
+        return new CallbackDataController();
+    }
+
+    @Bean
+    public DocumentController documentController() {
+        return new DocumentController();
+    }
+
+    @Bean
+    public PhotoController photoController() {
+        return new PhotoController();
+    }
+
+    @Bean
+    public TextController textController() {
+        return new TextController();
     }
 }

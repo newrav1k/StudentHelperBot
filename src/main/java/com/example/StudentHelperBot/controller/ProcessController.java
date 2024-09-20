@@ -7,20 +7,25 @@ import com.example.StudentHelperBot.controller.type.TextController;
 import com.example.StudentHelperBot.utils.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
-public class Regulator {
-    private static final Logger log = LoggerFactory.getLogger(Regulator.class);
+@Repository
+public class ProcessController {
+    private static final Logger log = LoggerFactory.getLogger(ProcessController.class);
 
-    private final UpdateController updateController;
     private final MessageUtils messageUtils;
 
-    public Regulator(UpdateController updateController, MessageUtils messageUtils) {
-        this.updateController = updateController;
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    public ProcessController(MessageUtils messageUtils) {
         this.messageUtils = messageUtils;
     }
 
@@ -30,7 +35,7 @@ public class Regulator {
             return;
         }
         if (update.hasCallbackQuery()) {
-            new CallbackDataController().processUpdate(update);
+            processCallbackDataMessage(update);
         } else if (update.getMessage() != null) {
             distributeMessageByType(update);
         } else {
@@ -53,19 +58,23 @@ public class Regulator {
 
     private void setUnsupportedMessageTypeView(Update update) {
         SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
-                "Неподдерживаемый тип сообщения!", false);
-        updateController.setView(sendMessage);
+                "Неподдерживаемый тип сообщения!");
+        applicationContext.getBean(TextController.class).setView(sendMessage);
     }
 
     private void processPhotoMessage(Update update) {
-        new PhotoController().processUpdate(update);
+        applicationContext.getBean(PhotoController.class).processUpdate(update);
     }
 
     private void processDocMessage(Update update) {
-        new DocumentController().processUpdate(update);
+        applicationContext.getBean(DocumentController.class).processUpdate(update);
     }
 
     private void processTextMessage(Update update) {
-        new TextController().processUpdate(update);
+        applicationContext.getBean(TextController.class).processUpdate(update);
+    }
+
+    private void processCallbackDataMessage(Update update) {
+        applicationContext.getBean(CallbackDataController.class).processUpdate(update);
     }
 }
