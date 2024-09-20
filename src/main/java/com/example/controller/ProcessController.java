@@ -21,11 +21,11 @@ public class ProcessController {
     private static final Logger log = LoggerFactory.getLogger(ProcessController.class);
 
     private final MessageUtils messageUtils;
+    private final ApplicationContext applicationContext;
 
     @Autowired
-    private ApplicationContext applicationContext;
-
-    public ProcessController(MessageUtils messageUtils) {
+    public ProcessController(ApplicationContext applicationContext, MessageUtils messageUtils) {
+        this.applicationContext = applicationContext;
         this.messageUtils = messageUtils;
     }
 

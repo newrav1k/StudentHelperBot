@@ -3,7 +3,6 @@ package com.example.controller;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -15,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -28,7 +28,6 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     @Value("${bot.name}")
     private String botName;
 
-    @Autowired
     private final List<UpdateController> updateController;
     private final ProcessController processController;
 
@@ -38,11 +37,11 @@ public class StudentHelperBot extends TelegramLongPollingBot {
         this.processController = processController;
 
         // работает, но бот сосёт огромный хуй Айдара
-        List<BotCommand> botCommands = new ArrayList<>() {{
-            add(new BotCommand(START, "Информация о боте"));
-            add(new BotCommand(UPLOAD_FILE, "Загрузить файл"));
-            add(new BotCommand(HELP, "Справка"));
-        }};
+        List<BotCommand> botCommands = new ArrayList<>(Arrays.asList(
+                new BotCommand(START, "Информация о боте"),
+                new BotCommand(UPLOAD_FILE, "Загрузить файл"),
+                new BotCommand(HELP, "Справка"))
+        );
         try {
             execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException exception) {
