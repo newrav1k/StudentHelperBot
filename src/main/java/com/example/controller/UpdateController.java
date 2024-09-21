@@ -7,12 +7,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public interface UpdateController {
     Map<Long, States> userStates = new HashMap<>();
 
-    ArrayList<String> directories = new ArrayList<>();
+    List<String> directories = new ArrayList<>();
 
     MessageUtils messageUtils = new MessageUtils();
 

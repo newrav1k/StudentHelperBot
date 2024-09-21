@@ -47,10 +47,12 @@ public class CallbackDataController implements UpdateController {
 
     private void saveProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка сохранения"));
+        log.info(update.getCallbackQuery().getData());
     }
 
     private void convertProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка конвертации"));
+        log.info(update.getCallbackQuery().getData());
     }
 
     private void deleteProcess(Update update) {
@@ -64,7 +66,7 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void addProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить "));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить"));
         log.info(update.getCallbackQuery().getData());
     }
 

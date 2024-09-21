@@ -34,12 +34,7 @@ public class TextController implements UpdateController {
                 log.info("Для пользователя {} установлено состояние {}",
                         update.getMessage().getChat().getUserName(), States.WAITING_FILE);
             }
-            case SHOW_DIRECTORIS -> {
-                setShowDirectoriesView(update);
-                /*setUserStates(update, States.WAITING_FILE);
-                log.info("Для пользователя {} еще раз установлено состояние {}",
-                        update.getMessage().getChat().getUserName(), States.WAITING_FILE);*/
-            }
+            case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
             default -> setView(messageUtils.generateSendMessageWithText(update, message));
         }
     }
@@ -71,7 +66,8 @@ public class TextController implements UpdateController {
                         ⚙️ Команды
                         
                         /start — описание и перезапуск бота
-                        /upload_file — загрузка файла на сервер""");
+                        /upload_file — загрузка файла на сервер
+                        /show_directories — отобразить все директории""");
         setView(sendMessage);
     }
 

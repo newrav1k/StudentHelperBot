@@ -22,7 +22,7 @@ public class PhotoController implements UpdateController {
     @Override
     public void processUpdate(Update update) {
         Long chatId = update.getMessage().getChatId();
-        States states = userStates.get(chatId);
+        States states = userStates.getOrDefault(chatId, States.ACTIVE);
         switch (states) {
             case ACTIVE -> producerProcess(update);
             case WAITING_FILE -> {

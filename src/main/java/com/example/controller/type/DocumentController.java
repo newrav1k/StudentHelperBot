@@ -25,7 +25,8 @@ public class DocumentController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        States states = userStates.get(update.getMessage().getChatId());
+        Long chatId = update.getMessage().getChatId();
+        States states = userStates.getOrDefault(chatId, States.ACTIVE);
         switch (states) {
             case ACTIVE -> producerProcess(update);
             case WAITING_FILE -> saveProcess(update);
