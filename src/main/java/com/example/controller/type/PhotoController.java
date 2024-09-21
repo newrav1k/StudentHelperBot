@@ -2,6 +2,7 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.enums.States;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,7 +21,17 @@ public class PhotoController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        setView(messageUtils.generateSendMessageWithText(update, "Фотография получена..."));
+        Long chatId = update.getMessage().getChatId();
+        States states = userStates.get(chatId);
+        switch (states) {
+            case ACTIVE -> producerProcess(update);
+            case WAITING_FILE -> {
+                setUserStates(update, States.WAITING_FILE);
+                log.info("Для пользователя {} установлено состояние {}",
+                        update.getCallbackQuery().getFrom().getUserName(), States.WAITING_FILE);
+            }
+            default -> log.info("Произошла непредвиденная ошибка!");
+        }
     }
 
     @Override
@@ -31,5 +42,9 @@ public class PhotoController implements UpdateController {
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
+    }
+
+    private void producerProcess(Update update) {
+        log.info("Запущен метод producerProcess для {}", update.getMessage().getChat().getUserName());
     }
 }

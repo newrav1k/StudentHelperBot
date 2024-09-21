@@ -57,8 +57,6 @@ public class CallbackDataController implements UpdateController {
 
     private void cancelProcess(Update update) {
         setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update,
-                "Действие отменено"));
         log.info("Для пользователя {} установлено состояние {}",
                 update.getCallbackQuery().getFrom().getUserName(), States.ACTIVE);
     }
