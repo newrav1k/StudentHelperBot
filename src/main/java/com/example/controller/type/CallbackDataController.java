@@ -3,6 +3,7 @@ package com.example.controller.type;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.CallbackData;
+import com.example.enums.States;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -55,6 +56,10 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void cancelProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка отмены"));
+        setUserStates(update, States.ACTIVE);
+        setView(messageUtils.generateSendMessageWithText(update,
+                "Действие отменено"));
+        log.info("Для пользователя {} установлено состояние {}",
+                update.getCallbackQuery().getFrom().getUserName(), States.ACTIVE);
     }
 }

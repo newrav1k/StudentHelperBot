@@ -2,6 +2,7 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.enums.States;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +28,12 @@ public class TextController implements UpdateController {
         switch (message) {
             case START -> setStartView(update);
             case HELP -> setHelpView(update);
-            case UPLOAD_FILE -> setUploadFileView(update);
+            case UPLOAD_FILE -> {
+                setUploadFileView(update);
+                setUserStates(update, States.WAITING_FILE);
+                log.info("Для пользователя {} установлено состояние {}",
+                        update.getMessage().getChat().getUserName(), States.WAITING_FILE);
+            }
             default -> setView(messageUtils.generateSendMessageWithText(update, message));
         }
     }
@@ -64,8 +70,7 @@ public class TextController implements UpdateController {
     }
 
     private void setUploadFileView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
-                "Загрузите файл, который хотите сохранить");
+        SendMessage sendMessage = messageUtils.generateSendMessageForDocumentSelection(update);
         setView(sendMessage);
     }
 }

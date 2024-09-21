@@ -29,7 +29,7 @@ public class MessageUtils {
 
     public SendMessage generateSendMessageForDocument(Update update) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = getFileRows();
+        List<List<InlineKeyboardButton>> rows = uploadingFile();
 
         // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
@@ -42,7 +42,22 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    private List<List<InlineKeyboardButton>> getFileRows() {
+    public SendMessage generateSendMessageForDocumentSelection(Update update) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = fileSelection();
+
+        // Устанавливаем кнопки в markup
+        markup.setKeyboard(rows);
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        sendMessage.setText("Загрузите файл, который хотите сохранить");
+        sendMessage.setReplyMarkup(markup);
+
+        return sendMessage;
+    }
+
+    private List<List<InlineKeyboardButton>> uploadingFile() {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         // Создаем первую строку с кнопками
@@ -66,6 +81,19 @@ public class MessageUtils {
 
         rows.add(row1);
         rows.add(row2);
+        return rows;
+    }
+
+    private List<List<InlineKeyboardButton>> fileSelection() {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Отмена");
+        button1.setCallbackData("callback_data_cancel");
+        row1.add(button1);
+
+        rows.add(row1);
         return rows;
     }
 }
