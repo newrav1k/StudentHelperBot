@@ -28,7 +28,7 @@ public class TextController implements UpdateController {
             case START -> setStartView(update);
             case HELP -> setHelpView(update);
             case UPLOAD_FILE -> setUploadFileView(update);
-            default -> log.info(message);
+            default -> setView(messageUtils.generateSendMessageWithText(update, message));
         }
     }
 
@@ -45,7 +45,9 @@ public class TextController implements UpdateController {
     private void setStartView(Update update) {
         Message message = update.getMessage();
         String text = String.format("""
-                Привет, %s! Я — телеграм-бот, созданный командой талантливых людей.
+                Привет, %s! Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!
+                Кроме того, вы можете общаться со мной, как с ChatGPT.
+                
                 Чтобы узнать, какие функции уже доступны, введите команду /help.""",
                 message.getChat().getFirstName());
         setView(messageUtils.generateSendMessageWithText(update, text));
@@ -54,15 +56,10 @@ public class TextController implements UpdateController {
     private void setHelpView(Update update) {
         SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
                 """
-                        Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!
-                        
-                        Кроме того, вы можете общаться со мной, как с ChatGPT.
-                        
                         ⚙️ Команды
                         
                         /start — описание и перезапуск бота
-                        /upload_file — загрузка файла на сервер
-                        /help — справка""");
+                        /upload_file — загрузка файла на сервер""");
         setView(sendMessage);
     }
 

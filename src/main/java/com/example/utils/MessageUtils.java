@@ -27,7 +27,7 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDocumentTypeMessage(Update update) {
+    public SendMessage generateSendMessageForDocument(Update update) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getFileRows();
 

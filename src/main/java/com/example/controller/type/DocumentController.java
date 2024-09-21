@@ -20,7 +20,7 @@ public class DocumentController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        setView(messageUtils.generateSendMessageForDocumentTypeMessage(update));
+        setView(messageUtils.generateSendMessageForDocument(update));
     }
 
     @Override
