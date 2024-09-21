@@ -42,17 +42,35 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDocumentSelection(Update update) {
+    public SendMessage generateSendMessageForDocumentSelection(Update update, String suggestion) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = fileSelection();
+        List<List<InlineKeyboardButton>> rows = actionSelection();
 
         // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText("Загрузите файл, который хотите сохранить");
+        sendMessage.setText(suggestion);
         sendMessage.setReplyMarkup(markup);
+
+        return sendMessage;
+    }
+
+    public SendMessage generateSendMessageForDirectories(Update update) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getDirectoryRows();
+
+         // Устанавливаем кнопки в markup
+        markup.setKeyboard(rows);
+
+         // Создаем сообщение
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        sendMessage.setText("Список директорий из базы данных:");
+        sendMessage.setReplyMarkup(markup);
+
+        // Отправляем сообщение
 
         return sendMessage;
     }
@@ -84,7 +102,39 @@ public class MessageUtils {
         return rows;
     }
 
-    private List<List<InlineKeyboardButton>> fileSelection() {
+    private List<List<InlineKeyboardButton>> getDirectoryRows() {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Добавить"); // Текст на кнопке
+        button1.setCallbackData("callback_data_add"); // Данные для обратного вызова
+        row1.add(button1);
+
+        InlineKeyboardButton button2 = new InlineKeyboardButton();
+        button2.setText("Выбрать");
+        button2.setCallbackData("callback_data_choose");
+        row1.add(button2);
+
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton button3 = new InlineKeyboardButton();
+        button3.setText("Удалить");
+        button3.setCallbackData("callback_data_delete");
+        row2.add(button3);
+
+        List<InlineKeyboardButton> row3 = new ArrayList<>();
+        InlineKeyboardButton button4 = new InlineKeyboardButton();
+        button4.setText("Отмена");
+        button4.setCallbackData("callback_data_cancel");
+        row3.add(button4);
+
+        rows.add(row1);
+        rows.add(row2);
+        rows.add(row3);
+        return rows;
+    }
+
+    private List<List<InlineKeyboardButton>> actionSelection() {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         List<InlineKeyboardButton> row1 = new ArrayList<>();

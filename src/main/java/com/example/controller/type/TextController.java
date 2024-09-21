@@ -34,6 +34,12 @@ public class TextController implements UpdateController {
                 log.info("Для пользователя {} установлено состояние {}",
                         update.getMessage().getChat().getUserName(), States.WAITING_FILE);
             }
+            case SHOW_DIRECTORIS -> {
+                setShowDirectoriesView(update);
+                /*setUserStates(update, States.WAITING_FILE);
+                log.info("Для пользователя {} еще раз установлено состояние {}",
+                        update.getMessage().getChat().getUserName(), States.WAITING_FILE);*/
+            }
             default -> setView(messageUtils.generateSendMessageWithText(update, message));
         }
     }
@@ -70,7 +76,13 @@ public class TextController implements UpdateController {
     }
 
     private void setUploadFileView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageForDocumentSelection(update);
+        SendMessage sendMessage = messageUtils.generateSendMessageForDocumentSelection(update,
+                "Загрузите файл, который хотите сохранить");
+        setView(sendMessage);
+    }
+
+    private void setShowDirectoriesView(Update update) {
+        SendMessage sendMessage = messageUtils.generateSendMessageForDirectories(update);
         setView(sendMessage);
     }
 }

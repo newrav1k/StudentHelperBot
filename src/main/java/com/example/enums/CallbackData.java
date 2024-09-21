@@ -6,7 +6,9 @@ public enum CallbackData {
     CALLBACK_DATA_SAVE ("callback_data_save"),
     CALLBACK_DATA_CONVERT ("callback_data_convert"),
     CALLBACK_DATA_DELETE ("callback_data_delete"),
-    CALLBACK_DATA_CANCEL ("callback_data_cancel");
+    CALLBACK_DATA_CANCEL ("callback_data_cancel"),
+    CALLBACK_DATA_ADD ("callback_data_add"),
+    CALLBACK_DATA_CHOOSE ("callback_data_choose");
 
     private final String title;
 

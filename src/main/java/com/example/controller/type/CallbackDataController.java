@@ -30,6 +30,8 @@ public class CallbackDataController implements UpdateController {
             case CALLBACK_DATA_CONVERT -> convertProcess(update);
             case CALLBACK_DATA_DELETE -> deleteProcess(update);
             case CALLBACK_DATA_CANCEL -> cancelProcess(update);
+            case CALLBACK_DATA_ADD -> addProcess(update);
+            case CALLBACK_DATA_CHOOSE -> chooseProcess(update);
         }
     }
 
@@ -59,5 +61,15 @@ public class CallbackDataController implements UpdateController {
         setUserStates(update, States.ACTIVE);
         log.info("Для пользователя {} установлено состояние {}",
                 update.getCallbackQuery().getFrom().getUserName(), States.ACTIVE);
+    }
+
+    private void addProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить "));
+        log.info(update.getCallbackQuery().getData());
+    }
+
+    private void chooseProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка выбрать"));
+        log.info(update.getCallbackQuery().getData());
     }
 }

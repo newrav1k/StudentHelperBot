@@ -5,11 +5,14 @@ import com.example.utils.MessageUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public interface UpdateController {
     Map<Long, States> userStates = new HashMap<>();
+
+    ArrayList<String> directories = new ArrayList<>();
 
     MessageUtils messageUtils = new MessageUtils();
 
