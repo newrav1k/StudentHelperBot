@@ -25,6 +25,7 @@ public class CallbackDataController implements UpdateController {
     public void processUpdate(Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
+//        Придумать удаление последнего сообщения с кнопками, чтобы избежать их повторного нажатия
         switch (CallbackData.fromString(data)) {
             case CALLBACK_DATA_SAVE -> saveProcess(update);
             case CALLBACK_DATA_CONVERT -> convertProcess(update);
@@ -55,10 +56,6 @@ public class CallbackDataController implements UpdateController {
         log.info(update.getCallbackQuery().getData());
     }
 
-    private void deleteProcess(Update update) {
-        log.info(update.getCallbackQuery().getData());
-    }
-
     private void cancelProcess(Update update) {
         setUserStates(update, States.ACTIVE);
         log.info("Для пользователя {} установлено состояние {}",
@@ -66,8 +63,19 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void addProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить"));
-        log.info(update.getCallbackQuery().getData());
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить \n" +
+                "Введите название новой директории:"));
+        setUserStates(update, States.WAITING_DIRECTORY_NAME_ADD);
+        log.info("Для пользователя {} установлено состояние {}",
+                update.getCallbackQuery().getFrom().getUserName(), States.WAITING_DIRECTORY_NAME_ADD);
+    }
+
+    private void deleteProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка удалить \n" +
+                "Введите название директории, которую хотите удалить:"));
+        setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE);
+        log.info("Для пользователя {} установлено состояние {}",
+                update.getCallbackQuery().getFrom().getUserName(), States.WAITING_DIRECTORY_NAME_DELETE);
     }
 
     private void chooseProcess(Update update) {
