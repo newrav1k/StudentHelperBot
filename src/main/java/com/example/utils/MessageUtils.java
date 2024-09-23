@@ -70,7 +70,7 @@ public class MessageUtils {
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
-        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(update, directories);
+        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(directories);
         CallbackDataController.setInlineKeyboardText(text);
 
          // Создаем сообщение
@@ -156,7 +156,7 @@ public class MessageUtils {
         return rows;
     }
 
-    public String buildDirectoriesList(Update update, List<String> directories) {
+    public String buildDirectoriesList(List<String> directories) {
         StringBuilder directoriesList = new StringBuilder();
         for (String directory : directories) {
             directoriesList.append(directories.indexOf(directory) + 1).append(".").append(directory).append("\n");

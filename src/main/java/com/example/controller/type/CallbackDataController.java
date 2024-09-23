@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Service
@@ -51,34 +50,24 @@ public class CallbackDataController implements UpdateController {
 
     private void saveProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка сохранения"));
-        log.info(update.getCallbackQuery().getData());
     }
 
     private void convertProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка конвертации"));
-        log.info(update.getCallbackQuery().getData());
     }
 
     private void cancelProcess(Update update) {
         setUserStates(update, States.ACTIVE);
-        log.info("Для пользователя {} установлено состояние {}",
-                update.getCallbackQuery().getFrom().getUserName(), States.ACTIVE);
     }
 
     private void addProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка добавить \n" +
-                "Введите название новой директории:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название новой директории:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_ADD);
-        log.info("Для пользователя {} установлено состояние {}",
-                update.getCallbackQuery().getFrom().getUserName(), States.WAITING_DIRECTORY_NAME_ADD);
     }
 
     private void deleteProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка удалить \n" +
-                "Введите название директории, которую хотите удалить:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название директории, которую хотите удалить:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE);
-        log.info("Для пользователя {} установлено состояние {}",
-                update.getCallbackQuery().getFrom().getUserName(), States.WAITING_DIRECTORY_NAME_DELETE);
     }
 
     private void chooseProcess(Update update) {
@@ -87,12 +76,12 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void deleteInlineKeyboard(Update update) {
-        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
-        String messageId = String.valueOf(update.getCallbackQuery().getMessage().getMessageId());
+        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
         String text = inlineKeyboardText;
         EditMessageText editMessage = new EditMessageText();
         editMessage.setChatId(chatId);
-        editMessage.setMessageId(Integer.parseInt(messageId));
+        editMessage.setMessageId(messageId);
         editMessage.setText(text);
         editMessage.setReplyMarkup(null);
         studentHelperBot.sendEditMessage(editMessage);

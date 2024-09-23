@@ -25,7 +25,10 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     public static final String START = "/start";
     public static final String UPLOAD_FILE = "/upload_file";
     public static final String SHOW_DIRECTORIES = "/show_directories";
+    public static final String RESET_STATE = "/reset_state";
     public static final String HELP = "/help";
+
+    private static final String SENDING_ERROR = "Не удалось отправить сообщение...{}";
 
     @Value("${bot.name}")
     private String botName;
@@ -41,12 +44,13 @@ public class StudentHelperBot extends TelegramLongPollingBot {
         // работает, но бот сосёт огромный хуй Айдара
         List<BotCommand> botCommands = new ArrayList<>(Arrays.asList(
                 new BotCommand(START, "Информация о боте"),
-                new BotCommand(UPLOAD_FILE, "Загрузить файл"),
                 new BotCommand(HELP, "Справка"),
-                new BotCommand(SHOW_DIRECTORIES, "Показать список директорий"))
-        );
+                new BotCommand(UPLOAD_FILE, "Загрузить файл"),
+                new BotCommand(RESET_STATE, "Сбросить состояние бота"),
+                new BotCommand(SHOW_DIRECTORIES, "Показать список директорий")
+        ));
         try {
-            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), null));
+            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), "ru"));
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }
@@ -74,16 +78,17 @@ public class StudentHelperBot extends TelegramLongPollingBot {
             try {
                 execute(message);
             } catch (TelegramApiException exception) {
-                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
+                log.error(SENDING_ERROR, exception.getMessage());
             }
         }
     }
+
     public void sendEditMessage(EditMessageText message) {
         if (message != null) {
             try {
                 execute(message);
             } catch (TelegramApiException exception) {
-                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
+                log.error(SENDING_ERROR, exception.getMessage());
             }
         }
     }

@@ -12,8 +12,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.Iterator;
-
 import static com.example.controller.StudentHelperBot.*;
 
 @Service
@@ -26,28 +24,28 @@ public class TextController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        String message = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
+        String message = update.getMessage().getText();
         States states = userStates.getOrDefault(chatId, States.ACTIVE);
-        if (states != States.ACTIVE) {
-            switch (states) {
-                case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
-                case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
+        switch (message) {
+            case START -> setStartView(update);
+            case HELP -> setHelpView(update);
+            case RESET_STATE -> setUserStates(update, States.ACTIVE);
+            case UPLOAD_FILE -> {
+                setUploadFileView(update);
+                setUserStates(update, States.WAITING_FILE);
             }
-        } else {
-//        switch (States) // Проверять на состояние waiting_directory_name и при его наличии добавлять название в список
-            // Само состояние задается в callback при нажатии соответственной кнопки
-            switch (message) {
-                case START -> setStartView(update);
-                case HELP -> setHelpView(update);
-                case UPLOAD_FILE -> {
-                    setUploadFileView(update);
-                    setUserStates(update, States.WAITING_FILE);
-                    log.info("Для пользователя {} установлено состояние {}",
-                            update.getMessage().getChat().getUserName(), States.WAITING_FILE);
+            case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
+            default -> {
+                if (states != States.ACTIVE) {
+                    if (states == States.WAITING_DIRECTORY_NAME_ADD) {
+                        addDirectory(update, message);
+                    } else if (states == States.WAITING_DIRECTORY_NAME_DELETE) {
+                        deleteDirectory(update, message);
+                    }
+                } else {
+                    producerProcess(update, message);
                 }
-                case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
-                default -> setView(messageUtils.generateSendMessageWithText(update, message));
             }
         }
     }
@@ -65,10 +63,10 @@ public class TextController implements UpdateController {
     private void setStartView(Update update) {
         Message message = update.getMessage();
         String text = String.format("""
-                Привет, %s! Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!
-                Кроме того, вы можете общаться со мной, как с ChatGPT.
-                
-                Чтобы узнать, какие функции уже доступны, введите команду /help.""",
+                        Привет, %s! Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!
+                        Кроме того, вы можете общаться со мной, как с ChatGPT.
+                        
+                        Чтобы узнать, какие функции уже доступны, введите команду /help.""",
                 message.getChat().getFirstName());
         setView(messageUtils.generateSendMessageWithText(update, text));
     }
@@ -80,7 +78,9 @@ public class TextController implements UpdateController {
                         
                         /start — описание и перезапуск бота
                         /upload_file — загрузка файла на сервер
-                        /show_directories — отобразить все директории""");
+                        /show_directories — отобразить все директории
+                        /reset_state — сбросить состояние бота
+                        """);
         setView(sendMessage);
     }
 
@@ -97,32 +97,23 @@ public class TextController implements UpdateController {
 
     private void addDirectory(Update update, String message) {
         directories.add(message);
+        log.info("Директория {} успешно добавлена", message);
         setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update, "Директория " + " успешно добавлена"));
-        log.info("Директория {} успешно добавлена \n" +
-                        "Для пользователя {} установлено состояние {}",
-                message, update.getMessage().getChat().getUserName(), States.ACTIVE);
+        setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
     }
 
     private void deleteDirectory(Update update, String message) {
-        Iterator<String> directoryIterator = directories.iterator();
-        boolean found = false;
-        while(directoryIterator.hasNext()) {
+        boolean removed = directories.removeIf(s -> s.equals(message));
+        if (removed) {
+            log.info("Директория {} успешно удалена", message);
+            setView(messageUtils.generateSendMessageWithText(update, "Директория успешно удалена"));
+            setUserStates(update, States.ACTIVE);
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, "Вы указали неверное имя удаляемой директории"));
+        }
+    }
 
-            String nextDirectory = directoryIterator.next();
-            if (nextDirectory.equals(message)) {
-                directoryIterator.remove();
-                found = true;
-                setView(messageUtils.generateSendMessageWithText(update, "Директория " + " успешно удалена"));
-                log.info("Директория {} успешно удалена", message);
-                break;
-            }
-        }
-        if (!found) {
-            setView(messageUtils.generateSendMessageWithText(update, "Вы ввели неверное имя удаляемой директории"));
-        }
-        setUserStates(update, States.ACTIVE);
-        log.info("Для пользователя {} установлено состояние {}",
-                update.getMessage().getChat().getUserName(), States.ACTIVE);
+    private void producerProcess(Update update, String message) {
+        setView(messageUtils.generateSendMessageWithText(update, message));
     }
 }
