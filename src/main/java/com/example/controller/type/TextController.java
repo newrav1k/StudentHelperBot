@@ -105,11 +105,24 @@ public class TextController implements UpdateController {
     }
 
     private void deleteDirectory(Update update, String message) {
-        directories.removeIf(nextDirectory -> nextDirectory.equals(message));
+        Iterator<String> directoryIterator = directories.iterator();
+        boolean found = false;
+        while(directoryIterator.hasNext()) {
+
+            String nextDirectory = directoryIterator.next();
+            if (nextDirectory.equals(message)) {
+                directoryIterator.remove();
+                found = true;
+                setView(messageUtils.generateSendMessageWithText(update, "Директория " + " успешно удалена"));
+                log.info("Директория {} успешно удалена", message);
+                break;
+            }
+        }
+        if (!found) {
+            setView(messageUtils.generateSendMessageWithText(update, "Вы ввели неверное имя удаляемой директории"));
+        }
         setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update, "Директория " + " успешно удалена"));
-        log.info("Директория {} успешно удалена \n" +
-                        "Для пользователя {} установлено состояние {}",
-                message, update.getMessage().getChat().getUserName(), States.ACTIVE);
+        log.info("Для пользователя {} установлено состояние {}",
+                update.getMessage().getChat().getUserName(), States.ACTIVE);
     }
 }

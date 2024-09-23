@@ -78,13 +78,13 @@ public class StudentHelperBot extends TelegramLongPollingBot {
             }
         }
     }
-//    public void sendEditMessage(EditMessageText message) {
-//        if (message != null) {
-//            try {
-//                execute(message);
-//            } catch (TelegramApiException exception) {
-//                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
-//            }
-//        }
-//    }
+    public void sendEditMessage(EditMessageText message) {
+        if (message != null) {
+            try {
+                execute(message);
+            } catch (TelegramApiException exception) {
+                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
+            }
+        }
+    }
 }

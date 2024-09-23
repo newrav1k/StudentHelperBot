@@ -20,6 +20,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Qualifier("callbackDataController")
 public class CallbackDataController implements UpdateController {
     private static final Logger log = LoggerFactory.getLogger(CallbackDataController.class);
+    private static String inlineKeyboardText;
 
     private StudentHelperBot studentHelperBot;
 
@@ -27,7 +28,7 @@ public class CallbackDataController implements UpdateController {
     public void processUpdate(Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
-//        Придумать удаление последнего сообщения с кнопками, чтобы избежать их повторного нажатия
+        deleteInlineKeyboard(update);
         switch (CallbackData.fromString(data)) {
             case CALLBACK_DATA_SAVE -> saveProcess(update);
             case CALLBACK_DATA_CONVERT -> convertProcess(update);
@@ -85,15 +86,19 @@ public class CallbackDataController implements UpdateController {
         log.info(update.getCallbackQuery().getData());
     }
 
-//    private void deleteInlineKeyboard(Update update) {
-//        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
-//        String messageId = String.valueOf(update.getCallbackQuery().getMessage().getMessageId());
-//        String text = update.getMessage().getText();
-//        EditMessageText editMessage = new EditMessageText();
-//        editMessage.setChatId(chatId);
-//        editMessage.setMessageId(Integer.parseInt(messageId));
-//        editMessage.setText("Список директорий из базы данных:" + "\n" + messageUtils.buildDirectoriesList(update, directories));
-//        editMessage.setReplyMarkup(null);
-//        studentHelperBot.sendEditMessage(editMessage);
-//    }
+    private void deleteInlineKeyboard(Update update) {
+        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
+        String messageId = String.valueOf(update.getCallbackQuery().getMessage().getMessageId());
+        String text = inlineKeyboardText;
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(Integer.parseInt(messageId));
+        editMessage.setText(text);
+        editMessage.setReplyMarkup(null);
+        studentHelperBot.sendEditMessage(editMessage);
+    }
+
+    public static void setInlineKeyboardText(String newInlineKeyboardText) {
+        inlineKeyboardText = newInlineKeyboardText;
+    }
 }

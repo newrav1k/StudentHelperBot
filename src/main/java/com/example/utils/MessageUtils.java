@@ -1,5 +1,6 @@
 package com.example.utils;
 
+import com.example.controller.type.CallbackDataController;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -34,9 +35,12 @@ public class MessageUtils {
         // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
+        String text = "Выберите что хотите сделать:";
+        CallbackDataController.setInlineKeyboardText(text);
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText("Выберите что хотите сделать:");
+        sendMessage.setText(text);
         sendMessage.setReplyMarkup(markup);
 
         return sendMessage;
@@ -48,6 +52,8 @@ public class MessageUtils {
 
         // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
+
+        CallbackDataController.setInlineKeyboardText(suggestion);
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
@@ -64,10 +70,13 @@ public class MessageUtils {
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
+        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(update, directories);
+        CallbackDataController.setInlineKeyboardText(text);
+
          // Создаем сообщение
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText("Список директорий из базы данных:" + "\n" + buildDirectoriesList(update, directories));
+        sendMessage.setText(text);
         sendMessage.setReplyMarkup(markup);
 
         // Отправляем сообщение
