@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Service
@@ -82,4 +84,16 @@ public class CallbackDataController implements UpdateController {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка выбрать"));
         log.info(update.getCallbackQuery().getData());
     }
+
+//    private void deleteInlineKeyboard(Update update) {
+//        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
+//        String messageId = String.valueOf(update.getCallbackQuery().getMessage().getMessageId());
+//        String text = update.getMessage().getText();
+//        EditMessageText editMessage = new EditMessageText();
+//        editMessage.setChatId(chatId);
+//        editMessage.setMessageId(Integer.parseInt(messageId));
+//        editMessage.setText("Список директорий из базы данных:" + "\n" + messageUtils.buildDirectoriesList(update, directories));
+//        editMessage.setReplyMarkup(null);
+//        studentHelperBot.sendEditMessage(editMessage);
+//    }
 }

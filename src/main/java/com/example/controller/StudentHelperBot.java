@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -77,4 +78,13 @@ public class StudentHelperBot extends TelegramLongPollingBot {
             }
         }
     }
+//    public void sendEditMessage(EditMessageText message) {
+//        if (message != null) {
+//            try {
+//                execute(message);
+//            } catch (TelegramApiException exception) {
+//                log.error("Не удалось отправить сообщение...{}", exception.getMessage());
+//            }
+//        }
+//    }
 }

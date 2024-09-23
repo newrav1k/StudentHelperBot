@@ -57,7 +57,7 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDirectories(Update update, List directories) {
+    public SendMessage generateSendMessageForDirectories(Update update, List<String> directories) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getDirectoryRows();
 
@@ -67,7 +67,7 @@ public class MessageUtils {
          // Создаем сообщение
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText("Список директорий из базы данных:" + directories);
+        sendMessage.setText("Список директорий из базы данных:" + "\n" + buildDirectoriesList(update, directories));
         sendMessage.setReplyMarkup(markup);
 
         // Отправляем сообщение
@@ -145,5 +145,13 @@ public class MessageUtils {
 
         rows.add(row1);
         return rows;
+    }
+
+    public String buildDirectoriesList(Update update, List<String> directories) {
+        StringBuilder directoriesList = new StringBuilder();
+        for (String directory : directories) {
+            directoriesList.append(directories.indexOf(directory) + 1).append(".").append(directory).append("\n");
+        }
+        return directoriesList.toString();
     }
 }
