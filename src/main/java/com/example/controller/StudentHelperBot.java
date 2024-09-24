@@ -50,7 +50,7 @@ public class StudentHelperBot extends TelegramLongPollingBot {
                 new BotCommand(HELP, "Справка")
         ));
         try {
-            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), "ru"));
+            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }

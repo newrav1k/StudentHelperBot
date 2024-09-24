@@ -54,7 +54,7 @@ public class TextController implements UpdateController {
                         case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
                         case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
                         case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
-                        case WAITING_FILE_NAME_ADD -> addFile(update, message, directory);
+                        case WAITING_FILE_NAME_ADD -> addFile(update, message);
                         case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
                         case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
                         case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
@@ -111,10 +111,15 @@ public class TextController implements UpdateController {
     }
 
     private void addDirectory(Update update, String message) {
-        directoriesAndFiles.put(message, new ArrayList<>());
-        log.info("Директория {} успешно добавлена", message);
+        boolean found = directoriesAndFiles.containsKey(message);
+        if (found) {
+            setView(messageUtils.generateSendMessageWithText(update, "Такая директория уже существует"));
+        } else {
+            directoriesAndFiles.put(message, new ArrayList<>());
+            log.info("Директория {} успешно добавлена", message);
+            setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
+        }
         setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
     }
 
     private void deleteDirectory(Update update, String message) {
@@ -129,8 +134,7 @@ public class TextController implements UpdateController {
     }
 
     private void setShowFilesView(Update update, String message) {
-        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
-        boolean found = directoriesList.contains(message);
+        boolean found = directoriesAndFiles.containsKey(message);
         if (found) {
             setView(messageUtils.generateSendMessageForFiles(update, directoriesAndFiles));
             directory = message;
@@ -140,16 +144,20 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void addFile(Update update, String message, String directory) {
-        directoriesAndFiles.get(directory).add(message);
-        log.info("Файл {} успешно добавлен", message);
-        setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
+    private void addFile(Update update, String message) {
+        boolean found = directoriesAndFiles.get(directory).contains(message);
+        if (found) {
+            setView(messageUtils.generateSendMessageWithText(update, "Такой файл уже существует"));
+        } else {
+            directoriesAndFiles.get(directory).add(message);
+            log.info("Файл {} успешно добавлен", message);
+            setUserStates(update, States.ACTIVE);
+            setView(messageUtils.generateSendMessageWithText(update, "Файл успешно добавлен"));
+        }
     }
 
     private void downloadFile(Update update, String message) {
-        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
-        boolean found = filesList.contains(message);
+        boolean found = directoriesAndFiles.get(directory).contains(message);
         if (found) {
             setView(messageUtils.generateSendMessageWithText(update, "Вы скачали файл " + message));
         } else {
@@ -159,8 +167,7 @@ public class TextController implements UpdateController {
     }
 
     private void deleteFile(Update update, String message) {
-        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
-        boolean removed = filesList.removeIf(s -> s.equals(message));
+        boolean removed = directoriesAndFiles.get(directory).removeIf(s -> s.equals(message));
         if (removed) {
             log.info("Файл {} успешно удален", message);
             setView(messageUtils.generateSendMessageWithText(update, "Файл успешно удален"));
@@ -171,8 +178,7 @@ public class TextController implements UpdateController {
     }
 
     private void chooseFileForChanging(Update update, String message) {
-        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
-        boolean found = filesList.contains(message);
+        boolean found = directoriesAndFiles.get(directory).contains(message);
         if (found) {
             file = message;
             setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
@@ -184,8 +190,7 @@ public class TextController implements UpdateController {
     }
 
     private void chooseDirectoryForChange(Update update, String message) {
-        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
-        boolean found = directoriesList.contains(message);
+        boolean found = directoriesAndFiles.containsKey(message);
         if (found) {
             directoriesAndFiles.get(message).add(file);
             directoriesAndFiles.get(directory).remove(file);
