@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class MessageUtils {
@@ -63,14 +64,35 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDirectories(Update update, List<String> directories) {
+    public SendMessage generateSendMessageForDirectories(Update update, Map<String, List<String>> directoriesAndFiles) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getDirectoryRows();
 
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
-        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(directories);
+        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(directoriesAndFiles);
+        CallbackDataController.setInlineKeyboardText(text);
+
+         // Создаем сообщение
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        sendMessage.setText(text);
+        sendMessage.setReplyMarkup(markup);
+
+        // Отправляем сообщение
+
+        return sendMessage;
+    }
+
+    public SendMessage generateSendMessageForFiles(Update update, Map<String, List<String>> directoriesAndFiles) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getFilesRows();
+
+         // Устанавливаем кнопки в markup
+        markup.setKeyboard(rows);
+
+        String text = "Список файлов директории " + update.getMessage().getText() + ":" + "\n" + buildFilesList(directoriesAndFiles, update);
         CallbackDataController.setInlineKeyboardText(text);
 
          // Создаем сообщение
@@ -117,7 +139,7 @@ public class MessageUtils {
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton button1 = new InlineKeyboardButton();
         button1.setText("Добавить"); // Текст на кнопке
-        button1.setCallbackData("callback_data_add"); // Данные для обратного вызова
+        button1.setCallbackData("callback_data_add_directory"); // Данные для обратного вызова
         row1.add(button1);
 
         InlineKeyboardButton button2 = new InlineKeyboardButton();
@@ -128,7 +150,7 @@ public class MessageUtils {
         List<InlineKeyboardButton> row2 = new ArrayList<>();
         InlineKeyboardButton button3 = new InlineKeyboardButton();
         button3.setText("Удалить");
-        button3.setCallbackData("callback_data_delete");
+        button3.setCallbackData("callback_data_delete_directory");
         row2.add(button3);
 
         List<InlineKeyboardButton> row3 = new ArrayList<>();
@@ -136,6 +158,43 @@ public class MessageUtils {
         button4.setText("Отмена");
         button4.setCallbackData("callback_data_cancel");
         row3.add(button4);
+
+        rows.add(row1);
+        rows.add(row2);
+        rows.add(row3);
+        return rows;
+    }
+
+    private List<List<InlineKeyboardButton>> getFilesRows() {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Добавить"); // Текст на кнопке
+        button1.setCallbackData("callback_data_add_file"); // Данные для обратного вызова
+        row1.add(button1);
+
+        InlineKeyboardButton button2 = new InlineKeyboardButton();
+        button2.setText("Скачать");
+        button2.setCallbackData("callback_data_download_file");
+        row1.add(button2);
+
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton button3 = new InlineKeyboardButton();
+        button3.setText("Изменить");
+        button3.setCallbackData("callback_data_change_file_directory");
+        row2.add(button3);
+
+        InlineKeyboardButton button4 = new InlineKeyboardButton();
+        button4.setText("Удалить");
+        button4.setCallbackData("callback_data_delete_file");
+        row2.add(button4);
+
+        List<InlineKeyboardButton> row3 = new ArrayList<>();
+        InlineKeyboardButton button5 = new InlineKeyboardButton();
+        button5.setText("Отмена");
+        button5.setCallbackData("callback_data_cancel");
+        row3.add(button5);
 
         rows.add(row1);
         rows.add(row2);
@@ -156,11 +215,21 @@ public class MessageUtils {
         return rows;
     }
 
-    public String buildDirectoriesList(List<String> directories) {
-        StringBuilder directoriesList = new StringBuilder();
-        for (String directory : directories) {
-            directoriesList.append(directories.indexOf(directory) + 1).append(".").append(directory).append("\n");
+    public String buildDirectoriesList(Map<String, List<String>> directoriesAndFiles) {
+        StringBuilder directoriesForSendMessage = new StringBuilder();
+        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
+        for (String directory : directoriesList) {
+            directoriesForSendMessage.append(directoriesList.indexOf(directory) + 1).append(".").append(directory).append("\n");
         }
-        return directoriesList.toString();
+        return directoriesForSendMessage.toString();
+    }
+
+    public String buildFilesList(Map<String, List<String>> directoriesAndFiles, Update update) {
+        StringBuilder filesForSendMessage = new StringBuilder();
+        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(update.getMessage().getText()));
+        for (String file : filesList) {
+            filesForSendMessage.append(filesList.indexOf(file) + 1).append(".").append(file).append("\n");
+        }
+        return filesForSendMessage.toString();
     }
 }

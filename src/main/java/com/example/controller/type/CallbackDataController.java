@@ -31,10 +31,14 @@ public class CallbackDataController implements UpdateController {
         switch (CallbackData.fromString(data)) {
             case CALLBACK_DATA_SAVE -> saveProcess(update);
             case CALLBACK_DATA_CONVERT -> convertProcess(update);
-            case CALLBACK_DATA_DELETE -> deleteProcess(update);
+            case CALLBACK_DATA_DELETE_DIRECTORY -> deleteDirectoryProcess(update);
             case CALLBACK_DATA_CANCEL -> cancelProcess(update);
-            case CALLBACK_DATA_ADD -> addProcess(update);
+            case CALLBACK_DATA_ADD_DIRECTORY -> addDirectoryProcess(update);
             case CALLBACK_DATA_CHOOSE -> chooseProcess(update);
+            case CALLBACK_DATA_ADD_FILE -> addFileProcess(update);
+            case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
+            case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
+            case CALLBACK_DATA_CHANGE_FILE_DIRECTORY -> changeFileDirectoryProcess(update);
         }
     }
 
@@ -60,19 +64,39 @@ public class CallbackDataController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void addProcess(Update update) {
+    private void addDirectoryProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название новой директории:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_ADD);
     }
 
-    private void deleteProcess(Update update) {
+    private void chooseProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите навзание директории, в которую хотите перейти:"));
+        setUserStates(update, States.WAITING_DIRECTORY_NAME_CHOOSE);
+    }
+
+    private void deleteDirectoryProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название директории, которую хотите удалить:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE);
     }
 
-    private void chooseProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка выбрать"));
-        log.info(update.getCallbackQuery().getData());
+    private void addFileProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Загрузите файл, который хотите добавить:"));
+        setUserStates(update, States.WAITING_FILE_NAME_ADD);
+    }
+
+    private void downloadFileProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите скачать:"));
+        setUserStates(update, States.WAITING_FILE_NAME_DOWNLOAD);
+    }
+
+    private void deleteFileProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите удалить:"));
+        setUserStates(update, States.WAITING_FILE_NAME_DELETE);
+    }
+
+    private void changeFileDirectoryProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите перенести в другую директорию:"));
+        setUserStates(update, States.WAITING_FILE_NAME_FOR_CHANGE);
     }
 
     private void deleteInlineKeyboard(Update update) {

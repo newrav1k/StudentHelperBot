@@ -17,7 +17,8 @@ public interface UpdateController {
 
     Map<Long, States> userStates = new HashMap<>();
 
-    List<String> directories = new ArrayList<>();
+//    List<String> directories = new ArrayList<>();
+    Map<String, List<String>> directoriesAndFiles = new HashMap<>();
 
     MessageUtils messageUtils = new MessageUtils();
 

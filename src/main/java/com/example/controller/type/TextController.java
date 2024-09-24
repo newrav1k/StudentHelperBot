@@ -12,6 +12,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.example.controller.StudentHelperBot.*;
 
 @Service
@@ -22,6 +25,11 @@ public class TextController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
+    private static String directory;
+    private static String file;
+    private static final String DIRECTORY_ERROR = "Вы указали неверное имя директории";
+    private static final String FILE_ERROR = "Вы указали неверное имя файла";
+
     @Override
     public void processUpdate(Update update) {
         Long chatId = update.getMessage().getChatId();
@@ -30,7 +38,11 @@ public class TextController implements UpdateController {
         switch (message) {
             case START -> setStartView(update);
             case HELP -> setHelpView(update);
-            case RESET_STATE -> setUserStates(update, States.ACTIVE);
+            case RESET_STATE -> {
+                setUserStates(update, States.ACTIVE);
+                file = null;
+                directory = null;
+            }
             case UPLOAD_FILE -> {
                 setUploadFileView(update);
                 setUserStates(update, States.WAITING_FILE);
@@ -38,13 +50,17 @@ public class TextController implements UpdateController {
             case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
             default -> {
                 if (states != States.ACTIVE) {
-                    if (states == States.WAITING_DIRECTORY_NAME_ADD) {
-                        addDirectory(update, message);
-                    } else if (states == States.WAITING_DIRECTORY_NAME_DELETE) {
-                        deleteDirectory(update, message);
+                    switch (states) {
+                        case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
+                        case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
+                        case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
+                        case WAITING_FILE_NAME_ADD -> addFile(update, message, directory);
+                        case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
+                        case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
+                        case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
+                        case WAITING_DIRECTORY_NAME_FOR_CHANGE -> chooseDirectoryForChange(update, message);
+                        default -> producerProcess(update, message);
                     }
-                } else {
-                    producerProcess(update, message);
                 }
             }
         }
@@ -91,26 +107,93 @@ public class TextController implements UpdateController {
     }
 
     private void setShowDirectoriesView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageForDirectories(update, directories);
-        setView(sendMessage);
+        setView(messageUtils.generateSendMessageForDirectories(update, directoriesAndFiles));
     }
 
     private void addDirectory(Update update, String message) {
-        directories.add(message);
+        directoriesAndFiles.put(message, new ArrayList<>());
         log.info("Директория {} успешно добавлена", message);
         setUserStates(update, States.ACTIVE);
         setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
     }
 
     private void deleteDirectory(Update update, String message) {
-        boolean removed = directories.removeIf(s -> s.equals(message));
+        boolean removed = directoriesAndFiles.keySet().removeIf(s -> s.equals(message));
         if (removed) {
             log.info("Директория {} успешно удалена", message);
             setView(messageUtils.generateSendMessageWithText(update, "Директория успешно удалена"));
-            setUserStates(update, States.ACTIVE);
         } else {
-            setView(messageUtils.generateSendMessageWithText(update, "Вы указали неверное имя удаляемой директории"));
+            setView(messageUtils.generateSendMessageWithText(update, DIRECTORY_ERROR));
         }
+        setUserStates(update, States.ACTIVE);
+    }
+
+    private void setShowFilesView(Update update, String message) {
+        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
+        boolean found = directoriesList.contains(message);
+        if (found) {
+            setView(messageUtils.generateSendMessageForFiles(update, directoriesAndFiles));
+            directory = message;
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, DIRECTORY_ERROR));
+        }
+        setUserStates(update, States.ACTIVE);
+    }
+
+    private void addFile(Update update, String message, String directory) {
+        directoriesAndFiles.get(directory).add(message);
+        log.info("Файл {} успешно добавлен", message);
+        setUserStates(update, States.ACTIVE);
+        setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
+    }
+
+    private void downloadFile(Update update, String message) {
+        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
+        boolean found = filesList.contains(message);
+        if (found) {
+            setView(messageUtils.generateSendMessageWithText(update, "Вы скачали файл " + message));
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, FILE_ERROR));
+        }
+        setUserStates(update, States.ACTIVE);
+    }
+
+    private void deleteFile(Update update, String message) {
+        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
+        boolean removed = filesList.removeIf(s -> s.equals(message));
+        if (removed) {
+            log.info("Файл {} успешно удален", message);
+            setView(messageUtils.generateSendMessageWithText(update, "Файл успешно удален"));
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, FILE_ERROR));
+        }
+        setUserStates(update, States.ACTIVE);
+    }
+
+    private void chooseFileForChanging(Update update, String message) {
+        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(directory));
+        boolean found = filesList.contains(message);
+        if (found) {
+            file = message;
+            setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
+            setView(messageUtils.generateSendMessageWithText(update, "Введите название директории, в которую хотите переместить файл:"));
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, FILE_ERROR));
+            setUserStates(update, States.ACTIVE);
+        }
+    }
+
+    private void chooseDirectoryForChange(Update update, String message) {
+        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
+        boolean found = directoriesList.contains(message);
+        if (found) {
+            directoriesAndFiles.get(message).add(file);
+            directoriesAndFiles.get(directory).remove(file);
+            setView(messageUtils.generateSendMessageWithText(update, "Файл успешно перемещен"));
+        } else {
+            setView(messageUtils.generateSendMessageWithText(update, DIRECTORY_ERROR));
+        }
+        setUserStates(update, States.ACTIVE);
     }
 
     private void producerProcess(Update update, String message) {
