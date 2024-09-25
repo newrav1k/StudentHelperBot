@@ -159,7 +159,7 @@ public class MessageUtils {
     public String buildDirectoriesList(List<String> directories) {
         StringBuilder directoriesList = new StringBuilder();
         for (String directory : directories) {
-            directoriesList.append(directories.indexOf(directory) + 1).append(".").append(directory).append("\n");
+            directoriesList.append(directories.indexOf(directory) + 1).append(". ").append(directory).append("\n");
         }
         return directoriesList.toString();
     }

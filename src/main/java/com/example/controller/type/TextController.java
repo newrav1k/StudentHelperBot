@@ -2,23 +2,28 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.entity.FileMetadata;
 import com.example.enums.States;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.io.File;
 
 import static com.example.controller.StudentHelperBot.*;
 
+@Slf4j
 @Service
 @Repository
 @Qualifier("textController")
 public class TextController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(TextController.class);
 
     private StudentHelperBot studentHelperBot;
 
@@ -30,21 +35,21 @@ public class TextController implements UpdateController {
         switch (message) {
             case START -> setStartView(update);
             case HELP -> setHelpView(update);
-            case RESET_STATE -> setUserStates(update, States.ACTIVE);
+            case RESET_STATE -> {
+                setView(messageUtils.generateSendMessageWithText(update, "Состояние сброшено"));
+                setUserStates(update, States.ACTIVE);
+            }
             case UPLOAD_FILE -> {
                 setUploadFileView(update);
                 setUserStates(update, States.WAITING_FILE);
             }
             case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
             default -> {
-                if (states != States.ACTIVE) {
-                    if (states == States.WAITING_DIRECTORY_NAME_ADD) {
-                        addDirectory(update, message);
-                    } else if (states == States.WAITING_DIRECTORY_NAME_DELETE) {
-                        deleteDirectory(update, message);
-                    }
-                } else {
-                    producerProcess(update, message);
+                switch (states) {
+                    case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
+                    case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
+                    case WAITING_FILE_NAME_CHOOSE -> sendFile(update, message);
+                    default -> producerProcess(update, message);
                 }
             }
         }
@@ -91,26 +96,44 @@ public class TextController implements UpdateController {
     }
 
     private void setShowDirectoriesView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageForDirectories(update, directories);
+        SendMessage sendMessage = messageUtils.generateSendMessageForDirectories(update,
+                hibernateRunner.getFileMetadata().stream().map(FileMetadata::getName).toList());
         setView(sendMessage);
     }
 
     private void addDirectory(Update update, String message) {
-        directories.add(message);
-        log.info("Директория {} успешно добавлена", message);
+        setView(messageUtils.generateSendMessageWithText(update, message));
         setUserStates(update, States.ACTIVE);
-        setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
     }
 
+
+
     private void deleteDirectory(Update update, String message) {
-        boolean removed = directories.removeIf(s -> s.equals(message));
+        /*boolean removed = directories.removeIf(s -> s.equals(message));
         if (removed) {
             log.info("Директория {} успешно удалена", message);
             setView(messageUtils.generateSendMessageWithText(update, "Директория успешно удалена"));
             setUserStates(update, States.ACTIVE);
         } else {
             setView(messageUtils.generateSendMessageWithText(update, "Вы указали неверное имя удаляемой директории"));
+        }*/
+        setView(messageUtils.generateSendMessageWithText(update, message));
+        setUserStates(update, States.ACTIVE);
+    }
+
+    private void sendFile(Update update, String message) {
+        File file = hibernateRunner.getFile(message);
+
+        SendDocument sendDocument = new SendDocument();
+        sendDocument.setChatId(update.getMessage().getChatId());
+        sendDocument.setDocument(new InputFile(file));
+
+        try {
+            studentHelperBot.execute(sendDocument);
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
         }
+        setUserStates(update, States.ACTIVE);
     }
 
     private void producerProcess(Update update, String message) {

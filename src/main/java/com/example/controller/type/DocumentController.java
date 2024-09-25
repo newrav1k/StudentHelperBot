@@ -3,23 +3,22 @@ package com.example.controller.type;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.States;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Document;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+@Slf4j
 @Service
 @Repository
 @Qualifier("documentController")
 public class DocumentController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
     private StudentHelperBot studentHelperBot;
 
@@ -50,18 +49,14 @@ public class DocumentController implements UpdateController {
 
     private void saveProcess(Update update) {
         Document document = update.getMessage().getDocument();
-
-        SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(update.getMessage().getChatId());
-        sendDocument.setDocument(new InputFile(document.getFileId()));
-
         try {
-            studentHelperBot.execute(sendDocument);
+            File file = studentHelperBot.execute(new GetFile(document.getFileId()));
+            java.io.File downloadedFile = studentHelperBot.downloadFile(file);
+            hibernateRunner.saveFile(downloadedFile, document.getFileName());
+            setView(messageUtils.generateSendMessageWithText(update, "Файл сохранён"));
         } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
+            setView(messageUtils.generateSendMessageWithText(update, "Не удалось сохранить файл"));
+            setUserStates(update, States.ACTIVE);
         }
-        setUserStates(update, States.ACTIVE);
-        log.info("Для пользователя {} установлено состояние {}",
-                update.getMessage().getChat().getUserName(), States.ACTIVE);
     }
 }

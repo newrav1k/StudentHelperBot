@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.database.HibernateRunner;
 import com.example.enums.States;
 import com.example.utils.MessageUtils;
 import org.slf4j.Logger;
@@ -14,6 +15,8 @@ import java.util.Map;
 
 public interface UpdateController {
     Logger log = LoggerFactory.getLogger(UpdateController.class);
+
+    HibernateRunner hibernateRunner = new HibernateRunner();
 
     Map<Long, States> userStates = new HashMap<>();
 

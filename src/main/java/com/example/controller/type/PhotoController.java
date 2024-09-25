@@ -28,7 +28,7 @@ public class PhotoController implements UpdateController {
             case WAITING_FILE -> {
                 setUserStates(update, States.WAITING_FILE);
                 log.info("Для пользователя {} установлено состояние {}",
-                        update.getCallbackQuery().getFrom().getUserName(), States.WAITING_FILE);
+                        update.getMessage().getFrom().getUserName(), States.WAITING_FILE);
             }
             default -> log.info("Произошла непредвиденная ошибка!");
         }

@@ -4,8 +4,8 @@ import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
@@ -14,11 +14,13 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+@Slf4j
 @Service
 @Repository
 @Qualifier("callbackDataController")
 public class CallbackDataController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(CallbackDataController.class);
+
+    @Setter
     private static String inlineKeyboardText;
 
     private StudentHelperBot studentHelperBot;
@@ -71,7 +73,7 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void chooseProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка выбрать"));
+        setUserStates(update, States.WAITING_FILE_NAME_CHOOSE);
         log.info(update.getCallbackQuery().getData());
     }
 
@@ -85,9 +87,5 @@ public class CallbackDataController implements UpdateController {
         editMessage.setText(text);
         editMessage.setReplyMarkup(null);
         studentHelperBot.sendEditMessage(editMessage);
-    }
-
-    public static void setInlineKeyboardText(String newInlineKeyboardText) {
-        inlineKeyboardText = newInlineKeyboardText;
     }
 }
