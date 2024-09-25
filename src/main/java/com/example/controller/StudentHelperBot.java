@@ -44,13 +44,13 @@ public class StudentHelperBot extends TelegramLongPollingBot {
         // работает, но бот сосёт огромный хуй Айдара
         List<BotCommand> botCommands = new ArrayList<>(Arrays.asList(
                 new BotCommand(START, "Информация о боте"),
-                new BotCommand(HELP, "Справка"),
                 new BotCommand(UPLOAD_FILE, "Загрузить файл"),
+                new BotCommand(SHOW_DIRECTORIES, "Показать список директорий"),
                 new BotCommand(RESET_STATE, "Сбросить состояние бота"),
-                new BotCommand(SHOW_DIRECTORIES, "Показать список директорий")
+                new BotCommand(HELP, "Справка")
         ));
         try {
-            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), "ru"));
+            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }
