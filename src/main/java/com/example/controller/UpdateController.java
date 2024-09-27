@@ -1,24 +1,34 @@
 package com.example.controller;
 
+import com.example.dao.DirectoryDao;
+import com.example.dao.FileMetadataDao;
+import com.example.dao.StudentDao;
+import com.example.dao.impl.DirectoryDaoImpl;
+import com.example.dao.impl.FileMetadataDaoImpl;
+import com.example.dao.impl.StudentDaoImpl;
+import com.example.entity.Directory;
 import com.example.enums.States;
 import com.example.utils.MessageUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public interface UpdateController {
-    Logger log = LoggerFactory.getLogger(UpdateController.class);
+    StudentDao studentDao = new StudentDaoImpl();
+    DirectoryDao directoryDao = new DirectoryDaoImpl();
+    FileMetadataDao fileMetadataDao = new FileMetadataDaoImpl();
 
     Map<Long, States> userStates = new HashMap<>();
 
-//    List<String> directories = new ArrayList<>();
     Map<String, List<String>> directoriesAndFiles = new HashMap<>();
+
+    Map<Long, File> previousFiles = new HashMap<>();
+
+    Map<Long, Directory> directories = new HashMap<>();
 
     MessageUtils messageUtils = new MessageUtils();
 
@@ -34,7 +44,6 @@ public interface UpdateController {
             chatId = update.getMessage().getChatId();
         }
         userStates.put(chatId, states);
-        log.info("Для пользователя {} установлено состояние {}", chatId, states);
     }
 
     void processUpdate(Update update);

@@ -2,18 +2,21 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.entity.Directory;
 import com.example.enums.States;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
 
 import static com.example.controller.StudentHelperBot.*;
 
@@ -36,16 +39,15 @@ public class TextController implements UpdateController {
         String message = update.getMessage().getText();
         States states = userStates.getOrDefault(chatId, States.ACTIVE);
         switch (message) {
-            case START -> setStartView(update);
-            case HELP -> setHelpView(update);
-            case RESET_STATE -> {
-                setUserStates(update, States.ACTIVE);
-                file = null;
-                directory = null;
+            case START -> {
+                setStartView(update);
+                studentDao.insert(update);
             }
+            case HELP -> setHelpView(update);
+            case RESET_STATE -> setUserStates(update, States.ACTIVE);
             case UPLOAD_FILE -> {
                 setUploadFileView(update);
-                setUserStates(update, States.WAITING_FILE);
+                setUserStates(update, States.WAITING_FILE_NAME_ADD);
             }
             case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
             default -> {
@@ -94,8 +96,8 @@ public class TextController implements UpdateController {
                         
                         /start — описание и перезапуск бота
                         /upload_file — загрузка файла на сервер
-                        /show_directories — отобразить все директории
                         /reset_state — сбросить состояние бота
+                        /show_directories — отобразить все директории
                         """);
         setView(sendMessage);
     }
@@ -107,40 +109,28 @@ public class TextController implements UpdateController {
     }
 
     private void setShowDirectoriesView(Update update) {
-        setView(messageUtils.generateSendMessageForDirectories(update, directoriesAndFiles));
+        setView(messageUtils.generateSendMessageForDirectories(update,
+                directoryDao.findAll(update)));
     }
 
     private void addDirectory(Update update, String message) {
-        boolean found = directoriesAndFiles.containsKey(message);
-        if (found) {
-            setView(messageUtils.generateSendMessageWithText(update, "Такая директория уже существует"));
-        } else {
-            directoriesAndFiles.put(message, new ArrayList<>());
-            log.info("Директория {} успешно добавлена", message);
-            setView(messageUtils.generateSendMessageWithText(update, "Директория успешно добавлена"));
-        }
+        directoryDao.insert(update, message);
+        setView(messageUtils.generateSendMessageWithText(update,
+                "Директория успешно создана"));
         setUserStates(update, States.ACTIVE);
     }
 
     private void deleteDirectory(Update update, String message) {
-        boolean removed = directoriesAndFiles.keySet().removeIf(s -> s.equals(message));
-        if (removed) {
-            log.info("Директория {} успешно удалена", message);
-            setView(messageUtils.generateSendMessageWithText(update, "Директория успешно удалена"));
-        } else {
-            setView(messageUtils.generateSendMessageWithText(update, DIRECTORY_ERROR));
-        }
+        directoryDao.delete(update, message);
         setUserStates(update, States.ACTIVE);
     }
 
     private void setShowFilesView(Update update, String message) {
-        boolean found = directoriesAndFiles.containsKey(message);
-        if (found) {
-            setView(messageUtils.generateSendMessageForFiles(update, directoriesAndFiles));
-            directory = message;
-        } else {
-            setView(messageUtils.generateSendMessageWithText(update, DIRECTORY_ERROR));
-        }
+        Directory directory = directoryDao.findByTitle(update, message);
+        directories.put(update.getMessage().getFrom().getId(), directory);
+
+        setView(messageUtils.generateSendMessageForFiles(update,
+                fileMetadataDao.findAll(update, directory)));
         setUserStates(update, States.ACTIVE);
     }
 
@@ -157,11 +147,16 @@ public class TextController implements UpdateController {
     }
 
     private void downloadFile(Update update, String message) {
-        boolean found = directoriesAndFiles.get(directory).contains(message);
-        if (found) {
-            setView(messageUtils.generateSendMessageWithText(update, "Вы скачали файл " + message));
-        } else {
-            setView(messageUtils.generateSendMessageWithText(update, FILE_ERROR));
+        File file = fileMetadataDao.findById(update, directories.get(update.getMessage().getFrom().getId()), message);
+
+        SendDocument sendDocument = new SendDocument();
+        sendDocument.setChatId(update.getMessage().getChat().getId());
+        sendDocument.setDocument(new InputFile(file));
+
+        try {
+            studentHelperBot.execute(sendDocument);
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
         }
         setUserStates(update, States.ACTIVE);
     }

@@ -4,21 +4,25 @@ import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+@Slf4j
 @Service
 @Repository
 @Qualifier("callbackDataController")
 public class CallbackDataController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(CallbackDataController.class);
+
+    @Setter
     private static String inlineKeyboardText;
 
     private StudentHelperBot studentHelperBot;
@@ -53,7 +57,13 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void saveProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка сохранения"));
+        try {
+            File previousFile = previousFiles.get(update.getCallbackQuery().getFrom().getId());
+            java.io.File file = studentHelperBot.downloadFile(previousFile);
+            fileMetadataDao.insert(update, file);
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
+        }
     }
 
     private void convertProcess(Update update) {
@@ -70,7 +80,7 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void chooseProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите навзание директории, в которую хотите перейти:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название директории, в которую хотите перейти:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_CHOOSE);
     }
 
@@ -100,7 +110,7 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void deleteInlineKeyboard(Update update) {
-        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
         String text = inlineKeyboardText;
         EditMessageText editMessage = new EditMessageText();
@@ -109,9 +119,5 @@ public class CallbackDataController implements UpdateController {
         editMessage.setText(text);
         editMessage.setReplyMarkup(null);
         studentHelperBot.sendEditMessage(editMessage);
-    }
-
-    public static void setInlineKeyboardText(String newInlineKeyboardText) {
-        inlineKeyboardText = newInlineKeyboardText;
     }
 }

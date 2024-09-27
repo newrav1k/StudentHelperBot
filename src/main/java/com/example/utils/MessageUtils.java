@@ -1,6 +1,7 @@
 package com.example.utils;
 
 import com.example.controller.type.CallbackDataController;
+import com.example.entity.Directory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -8,9 +9,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class MessageUtils {
@@ -64,14 +65,14 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDirectories(Update update, Map<String, List<String>> directoriesAndFiles) {
+    public SendMessage generateSendMessageForDirectories(Update update, List<Directory> directories) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getDirectoryRows();
 
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
-        String text = "Список директорий из базы данных:" + "\n" + buildDirectoriesList(directoriesAndFiles);
+        String text = "Список директорий из базы данных:\n" + buildDirectoriesList(directories);
         CallbackDataController.setInlineKeyboardText(text);
 
          // Создаем сообщение
@@ -85,14 +86,14 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForFiles(Update update, Map<String, List<String>> directoriesAndFiles) {
+    public SendMessage generateSendMessageForFiles(Update update, List<File> files) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getFilesRows();
 
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
-        String text = "Список файлов директории " + update.getMessage().getText() + ":" + "\n" + buildFilesList(directoriesAndFiles, update);
+        String text = "Список файлов директории:\n" + buildFilesList(files);
         CallbackDataController.setInlineKeyboardText(text);
 
          // Создаем сообщение
@@ -215,20 +216,21 @@ public class MessageUtils {
         return rows;
     }
 
-    public String buildDirectoriesList(Map<String, List<String>> directoriesAndFiles) {
+    public String buildDirectoriesList(List<Directory> directories) {
         StringBuilder directoriesForSendMessage = new StringBuilder();
-        List<String> directoriesList = new ArrayList<>(directoriesAndFiles.keySet());
-        for (String directory : directoriesList) {
-            directoriesForSendMessage.append(directoriesList.indexOf(directory) + 1).append(".").append(directory).append("\n");
+        for (Directory directory : directories) {
+            directoriesForSendMessage.append(directories.indexOf(directory) + 1)
+                    .append(". ").append(directory.getTitle()).append("\n");
         }
         return directoriesForSendMessage.toString();
     }
 
-    public String buildFilesList(Map<String, List<String>> directoriesAndFiles, Update update) {
+    public String buildFilesList(List<File> files) {
         StringBuilder filesForSendMessage = new StringBuilder();
-        List<String> filesList = new ArrayList<>(directoriesAndFiles.get(update.getMessage().getText()));
-        for (String file : filesList) {
-            filesForSendMessage.append(filesList.indexOf(file) + 1).append(".").append(file).append("\n");
+        int i = 0;
+        for (File file : files) {
+            filesForSendMessage.append(i++ + 1)
+                    .append(". ").append(file.getName()).append("\n");
         }
         return filesForSendMessage.toString();
     }
