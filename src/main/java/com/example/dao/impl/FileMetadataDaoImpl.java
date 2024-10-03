@@ -44,14 +44,10 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
                     byte[] bytes = new byte[(int) size];
                     buffer.get(bytes);
 
-                    Directory dir = Optional.ofNullable(session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
-                                    .setParameter("id", user.getId())
-                                    .setParameter("title", directory.getTitle())
-                                    .getSingleResult())
-                            .orElse(session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
-                                    .setParameter("id", user.getId())
-                                    .setParameter("title", "Прочее")
-                                    .getSingleResult());
+                    Directory dir = session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
+                            .setParameter("id", user.getId())
+                            .setParameter("title", Optional.ofNullable(directory.getTitle()).orElse("Прочее"))
+                            .getSingleResult();
                     student.addDirectory(dir);
 
                     FileMetadata fileMetadata = FileMetadata.builder()

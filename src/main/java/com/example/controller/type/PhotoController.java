@@ -24,8 +24,8 @@ public class PhotoController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        States states = informationStorage.getUserStates().getOrDefault(chatId, States.ACTIVE);
+        Long id = update.getMessage().getFrom().getId();
+        States states = informationStorage.getUserStates().getOrDefault(id, States.ACTIVE);
         switch (states) {
             case ACTIVE -> producerProcess(update);
             case WAITING_FILE_NAME_ADD -> setUserStates(update, States.WAITING_FILE_NAME_ADD);

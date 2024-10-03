@@ -60,7 +60,7 @@ public class CallbackDataController implements UpdateController {
         try {
             File previousFile = informationStorage.getFile(update.getCallbackQuery().getFrom().getId());
             java.io.File file = studentHelperBot.downloadFile(previousFile);
-            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), file);
+            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file);
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }

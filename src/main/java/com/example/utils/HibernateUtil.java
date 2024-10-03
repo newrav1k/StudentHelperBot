@@ -7,6 +7,10 @@ import org.hibernate.cfg.Configuration;
 
 @Slf4j
 public class HibernateUtil {
+
+    private HibernateUtil() {
+    }
+
     public static SessionFactory getSessionFactory() {
         Configuration configuration = new Configuration().configure();
         configuration.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());

@@ -24,8 +24,8 @@ public class DocumentController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        States states = informationStorage.getUserStates().getOrDefault(chatId, States.ACTIVE);
+        Long id = update.getMessage().getFrom().getId();
+        States states = informationStorage.getUserStates().getOrDefault(id, States.ACTIVE);
 
         File file = null;
         try {
@@ -33,7 +33,7 @@ public class DocumentController implements UpdateController {
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }
-        informationStorage.putFile(chatId, file);
+        informationStorage.putFile(id, file);
 
         switch (states) {
             case ACTIVE -> producerProcess(update);

@@ -11,8 +11,6 @@ import org.hibernate.Session;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
-import java.util.Optional;
-
 @Slf4j
 public class StudentDaoImpl implements StudentDao {
 

@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @Entity
 @EqualsAndHashCode(of = "title")
-@ToString(exclude = "filesMetadata")
+@ToString(exclude = {"filesMetadata", "student"})
 @Table(name = "directories", schema = "student_helper_bot")
 public class Directory {
     @Id
