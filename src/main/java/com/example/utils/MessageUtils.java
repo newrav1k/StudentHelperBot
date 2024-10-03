@@ -86,14 +86,14 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForFiles(Update update, List<File> files) {
+    public SendMessage generateSendMessageForFiles(Update update, List<File> files, Directory directory) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getFilesRows();
 
          // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
-        String text = "Список файлов директории:\n" + buildFilesList(files);
+        String text = directory.getTitle() + ":\n" + buildFilesList(files);
         CallbackDataController.setInlineKeyboardText(text);
 
          // Создаем сообщение
@@ -145,7 +145,7 @@ public class MessageUtils {
 
         InlineKeyboardButton button2 = new InlineKeyboardButton();
         button2.setText("Выбрать");
-        button2.setCallbackData("callback_data_choose");
+        button2.setCallbackData("callback_data_choose_directory");
         row1.add(button2);
 
         List<InlineKeyboardButton> row2 = new ArrayList<>();

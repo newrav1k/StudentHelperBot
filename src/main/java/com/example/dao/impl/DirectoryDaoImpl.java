@@ -6,8 +6,6 @@ import com.example.entity.Student;
 import com.example.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,66 +14,66 @@ import java.util.List;
 public class DirectoryDaoImpl implements DirectoryDao {
 
     @Override
-    public void insert(Update update, String title) {
-        User user = update.getMessage().getFrom();
+    public void insert(Student student, String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
-            Student student = session.get(Student.class, user.getId());
-            Directory directory = Directory.builder()
-                    .title(title)
-                    .build();
+            Student user = session.get(Student.class, student.getId());
 
-            if (student.getDirectories().contains(directory)) {
-                return;
-            }
-            student.addDirectory(directory);
+            Directory directory = Directory.builder().title(title).student(user).build();
+            session.saveOrUpdate(directory);
 
             session.getTransaction().commit();
         }
     }
 
     @Override
-    public void update(Update update, String title, String newTitle) {
-        User user = update.getMessage().getFrom();
+    public void update(Student student, String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
-            Directory directory = session.createQuery("from Directory where title = :title and student.id = :id", Directory.class)
+            session.createQuery("update Directory set title=:title where student.id=:id", Directory.class)
                     .setParameter("title", title)
-                    .setParameter("id", user.getId())
-                    .getSingleResult();
-            directory.setTitle(newTitle);
+                    .setParameter("id", student.getId())
+                    .executeUpdate();
 
             session.getTransaction().commit();
         }
     }
 
     @Override
-    public void delete(Update update, String title) {
-        User user = update.getMessage().getFrom();
+    public void deleteByTitle(Student student, String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
-            Directory directory = session.createQuery("delete from Directory where student.id = :id and title = :title", Directory.class)
-                    .setParameter("id", user.getId())
+            session.createQuery("delete from Directory where student.id=:id and title=:title", Directory.class)
+                    .setParameter("id", student.getId())
                     .setParameter("title", title)
-                    .getSingleResult();
-            session.detach(directory);
+                    .executeUpdate();
 
             session.getTransaction().commit();
         }
     }
 
     @Override
-    public Directory findByTitle(Update update, String title) {
-        User user = update.getMessage().getFrom();
+    public void deleteBySerial(Student student, int serial) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            session.get(Student.class, student.getId()).getDirectories().remove(serial - 1);
+
+            session.getTransaction().commit();
+        }
+    }
+
+    @Override
+    public Directory findByTitle(Student student, String title) {
         Directory directory;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
-            directory = session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
-                    .setParameter("id", user.getId())
+            directory = session.createQuery("from Directory where student.id=:id and title=:title", Directory.class)
+                    .setParameter("id", student.getId())
                     .setParameter("title", title)
                     .getSingleResult();
 
@@ -85,12 +83,27 @@ public class DirectoryDaoImpl implements DirectoryDao {
     }
 
     @Override
-    public List<Directory> findAll(Update update) {
+    public Directory findBySerial(Student student, int serial) {
+        Directory directory;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            Student user = session.get(Student.class, student.getId());
+
+            directory = user.getDirectories().get(serial - 1);
+
+            session.getTransaction().commit();
+        }
+        return directory;
+    }
+
+    @Override
+    public List<Directory> findAll(Student student) {
         List<Directory> directories;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
             directories = new ArrayList<>(session.createQuery("from Directory where student.id = :id", Directory.class)
-                    .setParameter("id", update.getMessage().getFrom().getId()).list());
+                    .setParameter("id", student.getId()).list());
             session.getTransaction().commit();
         }
         return directories;

@@ -3,6 +3,11 @@ package com.example.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +29,14 @@ public class FileMetadata {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "directory_id")
     private Directory directory;
+
+    @SneakyThrows
+    public static File convertToFile(FileMetadata fileMetadata) {
+        Path path = Paths.get(fileMetadata.getTitle());
+        File file = path.toFile();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(fileMetadata.getContent());
+        }
+        return file;
+    }
 }

@@ -1,18 +1,23 @@
 package com.example.dao;
 
 import com.example.entity.Directory;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import com.example.entity.Student;
 
 import java.util.List;
 
 public interface DirectoryDao {
-    void insert(Update update, String title);
 
-    void update(Update update, String title, String newTitle);
+    void insert(Student student, String title);
 
-    void delete(Update update, String title);
+    void update(Student student, String title);
 
-    Directory findByTitle(Update update, String title);
+    void deleteByTitle(Student student, String title);
 
-    List<Directory> findAll(Update update);
+    void deleteBySerial(Student student, int id);
+
+    Directory findByTitle(Student student, String title);
+
+    Directory findBySerial(Student student, int serial);
+
+    List<Directory> findAll(Student student);
 }

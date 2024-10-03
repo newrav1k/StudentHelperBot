@@ -25,14 +25,10 @@ public class PhotoController implements UpdateController {
     @Override
     public void processUpdate(Update update) {
         Long chatId = update.getMessage().getChatId();
-        States states = userStates.getOrDefault(chatId, States.ACTIVE);
+        States states = informationStorage.getUserStates().getOrDefault(chatId, States.ACTIVE);
         switch (states) {
             case ACTIVE -> producerProcess(update);
-            case WAITING_FILE_NAME_ADD -> {
-                setUserStates(update, States.WAITING_FILE_NAME_ADD);
-                log.info("Для пользователя {} установлено состояние {}",
-                        update.getMessage().getFrom().getUserName(), States.WAITING_FILE_NAME_ADD);
-            }
+            case WAITING_FILE_NAME_ADD -> setUserStates(update, States.WAITING_FILE_NAME_ADD);
             default -> log.info("Произошла непредвиденная ошибка!");
         }
     }

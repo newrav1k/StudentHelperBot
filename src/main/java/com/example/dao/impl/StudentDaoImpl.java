@@ -5,19 +5,16 @@ import com.example.entity.Directory;
 import com.example.entity.PersonalInfo;
 import com.example.entity.Student;
 import com.example.utils.HibernateUtil;
+import jakarta.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
-import java.util.*;
+import java.util.Optional;
 
 @Slf4j
 public class StudentDaoImpl implements StudentDao {
-
-    private static final Map<Long, Student> users = new HashMap<>();
 
     @Override
     public void insert(Update update) {
@@ -33,37 +30,18 @@ public class StudentDaoImpl implements StudentDao {
                             .build())
                     .build();
 
-            Directory directory = Directory.builder()
-                    .id(1L)
-                    .title("Прочее").build();
-            session.save(directory);
+            Directory directory;
+            try {
+                directory = session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
+                        .setParameter("id", student.getId())
+                        .setParameter("title", "Прочее")
+                        .getSingleResult();
+            } catch (NoResultException exception) {
+                directory = Directory.builder().title("Прочее").build();
+            }
+            session.saveOrUpdate(directory);
             directory.setStudent(student);
             session.saveOrUpdate(student);
-
-            users.put(user.getId(), student);
-
-            session.getTransaction().commit();
-        }
-    }
-
-    @Override
-    public void update(Update update) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            session.beginTransaction();
-
-
-            session.getTransaction().commit();
-        }
-    }
-
-    @Override
-    public void delete(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            session.beginTransaction();
-
-            Student student = session.get(Student.class, chatId);
-            session.delete(student);
 
             session.getTransaction().commit();
         }
@@ -71,16 +49,16 @@ public class StudentDaoImpl implements StudentDao {
 
     @Override
     public Student findById(Long id) {
-        return users.get(id);
-    }
+        Student student;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
 
-    @Override
-    public List<Student> findAll() {
-        Set<Map.Entry<Long, Student>> entries = users.entrySet();
-        List<Student> students = new ArrayList<>();
-        for (Map.Entry<Long, Student> entry : entries) {
-            students.add(entry.getValue());
+            student = session.createQuery("from Student where id = :id", Student.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+
+            session.getTransaction().commit();
         }
-        return students;
+        return student;
     }
 }

@@ -25,13 +25,7 @@ public class DocumentController implements UpdateController {
     @Override
     public void processUpdate(Update update) {
         Long chatId = update.getMessage().getChatId();
-        States states = userStates.getOrDefault(chatId, States.ACTIVE);
-
-        switch (states) {
-            case ACTIVE -> producerProcess(update);
-            case WAITING_FILE_NAME_ADD -> saveProcess(update);
-            default -> log.error("Что-то пошло не так");
-        }
+        States states = informationStorage.getUserStates().getOrDefault(chatId, States.ACTIVE);
 
         File file = null;
         try {
@@ -39,7 +33,13 @@ public class DocumentController implements UpdateController {
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }
-        previousFiles.put(chatId, file);
+        informationStorage.putFile(chatId, file);
+
+        switch (states) {
+            case ACTIVE -> producerProcess(update);
+            case WAITING_FILE_NAME_ADD -> saveProcess(update);
+            default -> log.error("Что-то пошло не так");
+        }
     }
 
     @Override
@@ -61,7 +61,9 @@ public class DocumentController implements UpdateController {
         try {
             File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
             java.io.File downloadFile = studentHelperBot.downloadFile(execute);
-            fileMetadataDao.insert(update, downloadFile);
+            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), downloadFile);
+            setView(messageUtils.generateSendMessageWithText(update,
+                    "Файл успешно сохранён"));
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }

@@ -38,7 +38,7 @@ public class CallbackDataController implements UpdateController {
             case CALLBACK_DATA_DELETE_DIRECTORY -> deleteDirectoryProcess(update);
             case CALLBACK_DATA_CANCEL -> cancelProcess(update);
             case CALLBACK_DATA_ADD_DIRECTORY -> addDirectoryProcess(update);
-            case CALLBACK_DATA_CHOOSE -> chooseProcess(update);
+            case CALLBACK_DATA_CHOOSE_DIRECTORY -> chooseDirectoryProcess(update);
             case CALLBACK_DATA_ADD_FILE -> addFileProcess(update);
             case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
             case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
@@ -58,9 +58,9 @@ public class CallbackDataController implements UpdateController {
 
     private void saveProcess(Update update) {
         try {
-            File previousFile = previousFiles.get(update.getCallbackQuery().getFrom().getId());
+            File previousFile = informationStorage.getFile(update.getCallbackQuery().getFrom().getId());
             java.io.File file = studentHelperBot.downloadFile(previousFile);
-            fileMetadataDao.insert(update, file);
+            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), file);
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
         }
@@ -79,13 +79,13 @@ public class CallbackDataController implements UpdateController {
         setUserStates(update, States.WAITING_DIRECTORY_NAME_ADD);
     }
 
-    private void chooseProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название директории, в которую хотите перейти:"));
+    private void chooseDirectoryProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите директорию, в которую хотите перейти:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_CHOOSE);
     }
 
     private void deleteDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название директории, которую хотите удалить:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите директорию, которую хотите удалить:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE);
     }
 
@@ -95,20 +95,21 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void downloadFileProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите скачать:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите скачать:"));
         setUserStates(update, States.WAITING_FILE_NAME_DOWNLOAD);
     }
 
     private void deleteFileProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите удалить:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите удалить:"));
         setUserStates(update, States.WAITING_FILE_NAME_DELETE);
     }
 
     private void changeFileDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название файла, который хотите перенести в другую директорию:"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите перенести в другую директорию:"));
         setUserStates(update, States.WAITING_FILE_NAME_FOR_CHANGE);
     }
 
+    // Что-то придумать с удалением кнопок, сделать это лаконичнее
     private void deleteInlineKeyboard(Update update) {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
