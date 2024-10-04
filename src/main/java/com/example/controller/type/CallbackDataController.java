@@ -1,12 +1,15 @@
 package com.example.controller.type;
 
+import com.example.controller.ProcessController;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
+import com.example.utils.MessageUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -66,6 +69,7 @@ public class CallbackDataController implements UpdateController {
         }
     }
 
+    // привязать DocumentController метод converter(Update update)
     private void convertProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка конвертации"));
     }

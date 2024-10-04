@@ -5,6 +5,7 @@ import com.example.enums.States;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
 
 import java.util.HashMap;
@@ -20,6 +21,8 @@ public class InformationStorage {
 
     private Map<Long, Directory> previousDirectories = new HashMap<>();
 
+    private Map<Long, Document> previousDocument = new HashMap<>();
+
     public States getState(long id) {
         return userStates.get(id);
     }
@@ -30,6 +33,10 @@ public class InformationStorage {
 
     public Directory getDirectory(long id) {
         return previousDirectories.get(id);
+    }
+
+    public Document getDocument(long id) {
+        return previousDocument.get(id);
     }
 
     public void putState(long id, States state) {
@@ -45,6 +52,10 @@ public class InformationStorage {
     public void putDirectory(long id, Directory directory) {
         previousDirectories.put(id, directory);
         log.info("У пользователя {} обновлёна выбранная директория - {}", id, directory);
+    }
+
+    public void putDocument(long id, Document document) {
+        previousDocument.put(id, document);
     }
 
     public void clearData(long id) {
