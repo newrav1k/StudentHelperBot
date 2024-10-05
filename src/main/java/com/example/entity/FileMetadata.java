@@ -18,6 +18,7 @@ import lombok.ToString;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -45,7 +46,7 @@ public class FileMetadata {
 
     @SneakyThrows
     public static File convertToFile(FileMetadata fileMetadata) {
-        Path path = Paths.get(fileMetadata.getTitle());
+        Path path = Files.createTempFile(null, fileMetadata.getTitle());
         File file = path.toFile();
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileMetadata.getContent());

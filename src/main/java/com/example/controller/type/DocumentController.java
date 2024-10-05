@@ -37,62 +37,57 @@ public class DocumentController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        Long id = update.getMessage().getFrom().getId();
-        States states = informationStorage.getUserStates().getOrDefault(id, States.ACTIVE);
+        long id = update.getMessage().getFrom().getId();
+        States states = informationStorage.getState(id);
 
-        File file = null;
+        File file;
         Document document = update.getMessage().getDocument();
         try {
             file = studentHelperBot.execute(new GetFile(document.getFileId()));
+            informationStorage.putDocument(id, document);
+            informationStorage.putFile(id, file);
+            switch (states) {
+                case ACTIVE -> producerProcess(update);
+                case WAITING_FILE_NAME_ADD -> saveProcess(update);
+                default -> log.error("Что-то пошло не так");
+            }
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
-        }
-        informationStorage.putDocument(id, document);
-        informationStorage.putFile(id, file);
-
-        switch (states) {
-            case ACTIVE -> producerProcess(update);
-            case WAITING_FILE_NAME_ADD -> saveProcess(update);
-            default -> log.error("Что-то пошло не так");
         }
     }
 
     @Override
     public void init(StudentHelperBot studentHelperBot) {
         this.studentHelperBot = studentHelperBot;
+        log.info("Инициализация {} прошла успешно", this.getClass().getSimpleName());
     }
 
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
+        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
     }
 
     private void producerProcess(Update update) {
         setView(messageUtils.generateSendMessageForDocument(update));
     }
 
-    public void converter(Update update) {
+    public void converter(Update update) throws TelegramApiException, IOException {
         long id = update.getCallbackQuery().getFrom().getId();
-        try {
-            // Получаем объект документа из сообщения
-            String fileId = informationStorage.getDocument(id).getFileId();
+        // Получаем объект документа из сообщения
+        String fileId = informationStorage.getDocument(id).getFileId();
 
-            // Скачиваем документ Word
-            InputStream inputStream = downloadFileAsStream(fileId);
+        // Скачиваем документ Word
+        InputStream inputStream = downloadFileAsStream(fileId);
 
-            // Конвертируем документ в PDF
-            ByteArrayOutputStream pdfOutputStream = convertWordToPdf(inputStream);
+        // Конвертируем документ в PDF
+        ByteArrayOutputStream pdfOutputStream = convertWordToPdf(inputStream);
 
-            // Отправляем PDF обратно пользователю
-            sendPdfDocument(String.valueOf(id), pdfOutputStream, informationStorage.getDocument(id).getFileName(), update);
-
-        } catch (TelegramApiException | IOException exception) {
-            log.error(exception.getMessage());
-        }
+        // Отправляем PDF обратно пользователю
+        sendPdfDocument(String.valueOf(id), pdfOutputStream, informationStorage.getDocument(id).getFileName(), update);
     }
 
     private InputStream downloadFileAsStream(String fileId) throws TelegramApiException, IOException {
-
         // Получаем объект файла по fileId
         GetFile getFileMethod = new GetFile();
         getFileMethod.setFileId(fileId);
@@ -104,7 +99,6 @@ public class DocumentController implements UpdateController {
         String fileUrl = "https://api.telegram.org/file/bot" + studentHelperBot.getBotToken() + "/" + telegramFile.getFilePath();
 
         // Открываем InputStream для скачивания файла
-
         return URI.create(fileUrl).toURL().openStream();
     }
 
@@ -142,25 +136,18 @@ public class DocumentController implements UpdateController {
         sendDocument.setChatId(chatId);
         sendDocument.setDocument(new InputFile(pdfInputStream, pdfFileName));
 
-        try {
-            studentHelperBot.execute(sendDocument);
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
-        }
+        studentHelperBot.execute(sendDocument);
+
         setUserStates(update, States.ACTIVE);
     }
 
-    private void saveProcess(Update update) {
+    private void saveProcess(Update update) throws TelegramApiException {
         Document document = update.getMessage().getDocument();
-        try {
-            File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
-            java.io.File downloadFile = studentHelperBot.downloadFile(execute);
-            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), downloadFile);
-            setView(messageUtils.generateSendMessageWithText(update,
-                    "Файл успешно сохранён"));
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
-        }
+        File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
+        java.io.File downloadFile = studentHelperBot.downloadFile(execute);
+        fileMetadataDao.insert(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), downloadFile);
+        setView(messageUtils.generateSendMessageWithText(update,
+                "Файл успешно сохранён"));
         setUserStates(update, States.ACTIVE);
     }
 }

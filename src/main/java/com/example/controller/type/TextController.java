@@ -35,49 +35,49 @@ public class TextController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        Long id = update.getMessage().getFrom().getId();
+        long id = update.getMessage().getFrom().getId();
         String message = update.getMessage().getText();
-        States states = informationStorage.getUserStates().getOrDefault(id, States.ACTIVE);
-        switch (message) {
-            case START -> {
-                setStartView(update);
-                studentDao.insert(update);
-            }
-            case HELP -> setHelpView(update);
-            case RESET_STATE -> {
-                setUserStates(update, States.ACTIVE);
-                informationStorage.clearData(id);
-            }
-            case UPLOAD_FILE -> {
-                setUploadFileView(update);
-                setUserStates(update, States.WAITING_FILE_NAME_ADD);
-            }
-            case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
-            default -> {
-                if (states != States.ACTIVE) {
-                    switch (states) {
-                        case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
-                        case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
-                        case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
-                        case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
-                        case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
-                        case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
-                        case WAITING_DIRECTORY_NAME_FOR_CHANGE -> chooseDirectoryForChange(update, message);
-                        default -> producerProcess(update, message);
+        States states = informationStorage.getState(id);
+        try {
+            switch (message) {
+                case START -> {
+                    setStartView(update);
+                    studentDao.insert(update);
+                }
+                case HELP -> setHelpView(update);
+                case RESET_STATE -> resetState(update, id);
+                case UPLOAD_FILE -> updateFile(update);
+                case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
+                default -> {
+                    if (states != States.ACTIVE) {
+                        switch (states) {
+                            case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
+                            case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
+                            case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
+                            case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
+                            case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
+                            case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
+                            case WAITING_DIRECTORY_NAME_FOR_CHANGE -> chooseDirectoryForChange(update, message);
+                            default -> producerProcess(update, message);
+                        }
                     }
                 }
             }
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
         }
     }
 
     @Override
     public void init(StudentHelperBot studentHelperBot) {
         this.studentHelperBot = studentHelperBot;
+        log.info("Инициализация {} прошла успешно", this.getClass().getSimpleName());
     }
 
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
+        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
     }
 
     private void setStartView(Update update) {
@@ -147,18 +147,14 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void downloadFile(Update update, String message) {
+    private void downloadFile(Update update, String message) throws TelegramApiException {
         FileMetadata fileMetadata = fileMetadataDao.findById(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), message);
 
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(update.getMessage().getChat().getId());
         sendDocument.setDocument(new InputFile(FileMetadata.convertToFile(fileMetadata)));
 
-        try {
-            studentHelperBot.execute(sendDocument);
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
-        }
+        studentHelperBot.execute(sendDocument);
         setUserStates(update, States.ACTIVE);
     }
 
@@ -177,6 +173,16 @@ public class TextController implements UpdateController {
         setView(messageUtils.generateSendMessageWithText(update, "Файл успешно перемещен"));
         log.info(message);
         setUserStates(update, States.ACTIVE);
+    }
+
+    private void updateFile(Update update) {
+        setUploadFileView(update);
+        setUserStates(update, States.WAITING_FILE_NAME_ADD);
+    }
+
+    private void resetState(Update update, Long id) {
+        setUserStates(update, States.ACTIVE);
+        informationStorage.clearData(id);
     }
 
     private void producerProcess(Update update, String message) {

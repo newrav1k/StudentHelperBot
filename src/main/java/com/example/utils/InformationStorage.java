@@ -24,7 +24,7 @@ public class InformationStorage {
     private Map<Long, Document> previousDocument = new HashMap<>();
 
     public States getState(long id) {
-        return userStates.get(id);
+        return userStates.getOrDefault(id, States.ACTIVE);
     }
 
     public File getFile(long id) {

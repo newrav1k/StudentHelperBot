@@ -24,36 +24,38 @@ public class PhotoController implements UpdateController {
 
     @Override
     public void processUpdate(Update update) {
-        Long id = update.getMessage().getFrom().getId();
-        States states = informationStorage.getUserStates().getOrDefault(id, States.ACTIVE);
-        switch (states) {
-            case ACTIVE -> producerProcess(update);
-            case WAITING_FILE_NAME_ADD -> setUserStates(update, States.WAITING_FILE_NAME_ADD);
-            default -> log.info("Произошла непредвиденная ошибка!");
+        long id = update.getMessage().getFrom().getId();
+        States states = informationStorage.getState(id);
+        try {
+            switch (states) {
+                case ACTIVE -> producerProcess(update);
+                case WAITING_FILE_NAME_ADD -> setUserStates(update, States.WAITING_FILE_NAME_ADD);
+                default -> log.info("Произошла непредвиденная ошибка!");
+            }
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
         }
     }
 
     @Override
     public void init(StudentHelperBot studentHelperBot) {
         this.studentHelperBot = studentHelperBot;
+        log.info("Инициализация {} прошла успешно", this.getClass().getSimpleName());
     }
 
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
+        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
     }
 
-    private void producerProcess(Update update) {
+    private void producerProcess(Update update) throws TelegramApiException {
         PhotoSize photoSize = update.getMessage().getPhoto().get(0);
 
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setChatId(update.getMessage().getChatId());
         sendPhoto.setPhoto(new InputFile(photoSize.getFileId()));
 
-        try {
-            studentHelperBot.execute(sendPhoto);
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
-        }
+        studentHelperBot.execute(sendPhoto);
     }
 }

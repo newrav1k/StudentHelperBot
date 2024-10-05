@@ -1,13 +1,12 @@
 package com.example.controller.type;
 
-import com.example.controller.ProcessController;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
-import com.example.utils.MessageUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Repository;
@@ -18,6 +17,8 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.io.IOException;
 
 @Slf4j
 @Service
@@ -30,48 +31,57 @@ public class CallbackDataController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
+    private ApplicationContext context;
+
     @Override
     public void processUpdate(Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
         deleteInlineKeyboard(update);
-        switch (CallbackData.fromString(data)) {
-            case CALLBACK_DATA_SAVE -> saveProcess(update);
-            case CALLBACK_DATA_CONVERT -> convertProcess(update);
-            case CALLBACK_DATA_DELETE_DIRECTORY -> deleteDirectoryProcess(update);
-            case CALLBACK_DATA_CANCEL -> cancelProcess(update);
-            case CALLBACK_DATA_ADD_DIRECTORY -> addDirectoryProcess(update);
-            case CALLBACK_DATA_CHOOSE_DIRECTORY -> chooseDirectoryProcess(update);
-            case CALLBACK_DATA_ADD_FILE -> addFileProcess(update);
-            case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
-            case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
-            case CALLBACK_DATA_CHANGE_FILE_DIRECTORY -> changeFileDirectoryProcess(update);
+        try {
+            switch (CallbackData.fromString(data)) {
+                case CALLBACK_DATA_SAVE -> saveProcess(update);
+                case CALLBACK_DATA_CONVERT -> convertProcess(update);
+                case CALLBACK_DATA_DELETE_DIRECTORY -> deleteDirectoryProcess(update);
+                case CALLBACK_DATA_CANCEL -> cancelProcess(update);
+                case CALLBACK_DATA_ADD_DIRECTORY -> addDirectoryProcess(update);
+                case CALLBACK_DATA_CHOOSE_DIRECTORY -> chooseDirectoryProcess(update);
+                case CALLBACK_DATA_ADD_FILE -> addFileProcess(update);
+                case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
+                case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
+                case CALLBACK_DATA_CHANGE_FILE_DIRECTORY -> changeFileDirectoryProcess(update);
+            }
+        } catch (TelegramApiException exception) {
+            log.error(exception.getMessage());
         }
     }
 
     @Override
     public void init(StudentHelperBot studentHelperBot) {
         this.studentHelperBot = studentHelperBot;
+        log.info("Инициализация {} прошла успешно", this.getClass().getSimpleName());
     }
 
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
+        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
     }
 
-    private void saveProcess(Update update) {
-        try {
-            File previousFile = informationStorage.getFile(update.getCallbackQuery().getFrom().getId());
-            java.io.File file = studentHelperBot.downloadFile(previousFile);
-            fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file);
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
-        }
+    private void saveProcess(Update update) throws TelegramApiException {
+        File previousFile = informationStorage.getFile(update.getCallbackQuery().getFrom().getId());
+        java.io.File file = studentHelperBot.downloadFile(previousFile);
+        fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file);
     }
 
     // привязать DocumentController метод converter(Update update)
     private void convertProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Нажата кнопка конвертации"));
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Конвертируем файл..."));
+        try {
+            context.getBean(DocumentController.class).converter(update);
+        } catch (TelegramApiException | IOException exception) {
+            log.error(exception.getMessage());
+        }
     }
 
     private void cancelProcess(Update update) {
@@ -124,5 +134,10 @@ public class CallbackDataController implements UpdateController {
         editMessage.setText(text);
         editMessage.setReplyMarkup(null);
         studentHelperBot.sendEditMessage(editMessage);
+    }
+
+    @Autowired
+    public void setContext(ApplicationContext context) {
+        this.context = context;
     }
 }
