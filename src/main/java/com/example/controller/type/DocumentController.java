@@ -101,7 +101,7 @@ public class DocumentController implements UpdateController {
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
         java.io.File downloadFile = studentHelperBot.downloadFile(execute);
 
-        fileMetadataDao.insert(update, informationStorage.getDirectory(student.getId()), downloadFile);
+        fileMetadataDao.insert(update, informationStorage.getDirectory(student.getId()), downloadFile, document);
         setView(messageUtils.generateSendMessageWithText(update,
                 "Файл успешно сохранён"));
         setUserStates(update, States.ACTIVE);

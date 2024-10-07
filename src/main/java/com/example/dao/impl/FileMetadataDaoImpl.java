@@ -8,6 +8,7 @@ import com.example.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.telegram.telegrambots.meta.api.objects.Document;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -23,14 +24,12 @@ import java.util.Optional;
 public class FileMetadataDaoImpl implements FileMetadataDao {
 
     @Override
-    public void insert(Update update, Directory directory, File file) {
+    public void insert(Update update, Directory directory, File file, Document document) {
         User user = receivedUser(update);
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             Student student = session.get(Student.class, user.getId());
-
-            Document document = update.getMessage().getDocument();
 
             try (FileChannel channel = FileChannel.open(Path.of(file.toURI()))) {
                 long size = channel.size();
@@ -46,16 +45,21 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
 
                     Directory dir = session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
                             .setParameter("id", user.getId())
-                            .setParameter("title", Optional.ofNullable(directory.getTitle()).orElse("Прочее"))
+                            .setParameter("title", directory != null ? directory.getTitle() : "Прочее")
                             .getSingleResult();
                     student.addDirectory(dir);
 
+                    String fileName;
+                    if (update.hasCallbackQuery()) {
+                        fileName = document.getFileName();
+                    } else {
+                        fileName = update.getMessage().getCaption() == null ? document.getFileName() :
+                                update.getMessage().getCaption() + "."
+                                        + document.getFileName().split("\\.")[1];
+                    }
+
                     FileMetadata fileMetadata = FileMetadata.builder()
-                            .title(
-                                    update.getMessage().getCaption() == null ? document.getFileName() :
-                                            update.getMessage().getCaption() + "."
-                                                    + document.getFileName().split("\\.")[1]
-                            )
+                            .title(fileName)
                             .content(bytes)
                             .build();
                     dir.addFileMetadata(fileMetadata);

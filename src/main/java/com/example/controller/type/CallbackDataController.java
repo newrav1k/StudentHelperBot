@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -74,7 +75,11 @@ public class CallbackDataController implements UpdateController {
         File previousFile = informationStorage.getTGFile(student.getId());
         java.io.File file = studentHelperBot.downloadFile(previousFile);
 
-        fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file);
+        Document document = informationStorage.getDocument(student.getId());
+
+        fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file, document);
+        setView(messageUtils.generateSendMessageWithCallbackData(update,
+                "Файл успешно сохранён"));
     }
 
     private void convertProcess(Update update) {
