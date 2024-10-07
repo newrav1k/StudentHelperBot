@@ -2,6 +2,7 @@ package com.example.utils;
 
 import com.example.controller.type.CallbackDataController;
 import com.example.entity.Directory;
+import com.example.entity.FileMetadata;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -86,7 +87,7 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForFiles(Update update, List<File> files, Directory directory) {
+    public SendMessage generateSendMessageForFiles(Update update, List<FileMetadata> files, Directory directory) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getFilesRows();
 
@@ -216,7 +217,7 @@ public class MessageUtils {
         return rows;
     }
 
-    public String buildDirectoriesList(List<Directory> directories) {
+    private String buildDirectoriesList(List<Directory> directories) {
         StringBuilder directoriesForSendMessage = new StringBuilder();
         for (Directory directory : directories) {
             directoriesForSendMessage.append(directories.indexOf(directory) + 1)
@@ -225,12 +226,12 @@ public class MessageUtils {
         return directoriesForSendMessage.toString();
     }
 
-    public String buildFilesList(List<File> files) {
+    private String buildFilesList(List<FileMetadata> files) {
         StringBuilder filesForSendMessage = new StringBuilder();
         int i = 0;
-        for (File file : files) {
+        for (FileMetadata file : files) {
             filesForSendMessage.append(i++ + 1)
-                    .append(". ").append(file.getName()).append("\n");
+                    .append(". ").append(file.getTitle()).append("\n");
         }
         return filesForSendMessage.toString();
     }

@@ -2,6 +2,7 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.entity.Student;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
 import lombok.Setter;
@@ -69,12 +70,13 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void saveProcess(Update update) throws TelegramApiException {
-        File previousFile = informationStorage.getFile(update.getCallbackQuery().getFrom().getId());
+        Student student = studentDao.findById(update);
+        File previousFile = informationStorage.getTGFile(student.getId());
         java.io.File file = studentHelperBot.downloadFile(previousFile);
+
         fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file);
     }
 
-    // привязать DocumentController метод converter(Update update)
     private void convertProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Конвертируем файл..."));
         try {

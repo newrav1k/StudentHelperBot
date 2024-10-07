@@ -6,9 +6,8 @@ import com.example.entity.Directory;
 import com.example.entity.FileMetadata;
 import com.example.entity.Student;
 import com.example.enums.States;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
@@ -25,11 +24,11 @@ import static com.example.controller.StudentHelperBot.SHOW_DIRECTORIES;
 import static com.example.controller.StudentHelperBot.START;
 import static com.example.controller.StudentHelperBot.UPLOAD_FILE;
 
+@Slf4j
 @Service
 @Repository
 @Qualifier("textController")
 public class TextController implements UpdateController {
-    private static final Logger log = LoggerFactory.getLogger(TextController.class);
 
     private StudentHelperBot studentHelperBot;
 
@@ -111,13 +110,13 @@ public class TextController implements UpdateController {
     }
 
     private void setShowDirectoriesView(Update update) {
-        Student student = studentDao.findById(update.getMessage().getFrom().getId());
+        Student student = studentDao.findById(update);
         setView(messageUtils.generateSendMessageForDirectories(update,
                 directoryDao.findAll(student)));
     }
 
     private void addDirectory(Update update, String message) {
-        Student student = studentDao.findById(update.getMessage().getFrom().getId());
+        Student student = studentDao.findById(update);
         directoryDao.insert(student, message);
         setView(messageUtils.generateSendMessageWithText(update,
                 "Директория успешно создана"));
@@ -125,7 +124,7 @@ public class TextController implements UpdateController {
     }
 
     private void deleteDirectory(Update update, String message) {
-        Student student = studentDao.findById(update.getMessage().getFrom().getId());
+        Student student = studentDao.findById(update);
         if (StringUtils.isNumeric(message)) {
             directoryDao.deleteBySerial(student, Integer.parseInt(message));
         } else {
@@ -136,42 +135,57 @@ public class TextController implements UpdateController {
     }
 
     private void setShowFilesView(Update update, String message) {
-        Student student = studentDao.findById(update.getMessage().getFrom().getId());
+        Student student = studentDao.findById(update);
         Directory directory = StringUtils.isNumeric(message) ?
                 directoryDao.findBySerial(student, Integer.parseInt(message)) :
                 directoryDao.findByTitle(student, message);
-        informationStorage.putDirectory(update.getMessage().getFrom().getId(), directory);
+        informationStorage.putDirectory(student.getId(), directory);
 
         setView(messageUtils.generateSendMessageForFiles(update,
-                fileMetadataDao.findAll(update, directory), directory));
+                fileMetadataDao.findAll(student, directory), directory));
         setUserStates(update, States.ACTIVE);
     }
 
     private void downloadFile(Update update, String message) throws TelegramApiException {
-        FileMetadata fileMetadata = fileMetadataDao.findById(update, informationStorage.getDirectory(update.getMessage().getFrom().getId()), message);
+        Student student = studentDao.findById(update);
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
 
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(update.getMessage().getChat().getId());
-        sendDocument.setDocument(new InputFile(FileMetadata.convertToFile(fileMetadata)));
+        sendDocument.setDocument(new InputFile(FileMetadata.convertToInputStream(fileMetadata), fileMetadata.getTitle()));
 
         studentHelperBot.execute(sendDocument);
         setUserStates(update, States.ACTIVE);
     }
 
     private void deleteFile(Update update, String message) {
+        Student student = studentDao.findById(update);
+        Directory directory = informationStorage.getDirectory(student.getId());
+
+        fileMetadataDao.deleteBySerial(student, directory, Integer.parseInt(message));
+
         setView(messageUtils.generateSendMessageWithText(update, "Файл успешно удален"));
-        log.info(message);
         setUserStates(update, States.ACTIVE);
     }
 
     private void chooseFileForChanging(Update update, String message) {
+        Student student = studentDao.findById(update);
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
+
+        informationStorage.putFileMetadata(student.getId(), fileMetadata);
+
         setView(messageUtils.generateSendMessageWithText(update, "Введите название директории, в которую хотите переместить файл:"));
-        log.info(message);
+        setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
     }
 
     private void chooseDirectoryForChange(Update update, String message) {
+        Student student = studentDao.findById(update);
+        Directory directory = StringUtils.isNumeric(message) ?
+                directoryDao.findBySerial(student, Integer.parseInt(message)) :
+                directoryDao.findByTitle(student, message);
+        fileMetadataDao.moveToDirectory(student, directory, informationStorage.getFileMetadata(student.getId()));
+
         setView(messageUtils.generateSendMessageWithText(update, "Файл успешно перемещен"));
-        log.info(message);
         setUserStates(update, States.ACTIVE);
     }
 

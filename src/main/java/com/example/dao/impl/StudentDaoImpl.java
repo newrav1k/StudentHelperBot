@@ -46,13 +46,14 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public Student findById(Long id) {
+    public Student findById(Update update) {
         Student student;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             student = session.createQuery("from Student where id = :id", Student.class)
-                    .setParameter("id", id)
+                    .setParameter("id", update.hasCallbackQuery() ?
+                            update.getCallbackQuery().getFrom().getId() : update.getMessage().getFrom().getId())
                     .getSingleResult();
 
             session.getTransaction().commit();

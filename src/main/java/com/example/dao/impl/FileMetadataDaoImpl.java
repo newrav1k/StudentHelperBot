@@ -69,14 +69,37 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public FileMetadata findById(Update update, Directory directory, String number) {
+    public void deleteBySerial(Student student, Directory directory, int serial) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            session.get(Directory.class, directory.getId()).getFilesMetadata().remove(serial - 1);
+
+            session.getTransaction().commit();
+        }
+    }
+
+    @Override
+    public void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            session.createMutationQuery("update FileMetadata set directory = :directory where id = :id")
+                    .setParameter("directory", directory).setParameter("id", fileMetadata.getId()).executeUpdate();
+
+            session.getTransaction().commit();
+        }
+    }
+
+    @Override
+    public FileMetadata findBySerial(Student student, Directory directory, int serial) {
         FileMetadata fileMetadata;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             fileMetadata = session.createQuery("from FileMetadata where directory.id = :id", FileMetadata.class)
                     .setParameter("id", directory.getId())
-                    .getResultList().get(Integer.parseInt(number) - 1);
+                    .getResultList().get(serial - 1);
 
             session.getTransaction().commit();
         }
@@ -84,14 +107,14 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public List<File> findAll(Update update, Directory directory) {
-        List<File> files;
+    public List<FileMetadata> findAll(Student student, Directory directory) {
+        List<FileMetadata> files;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             files = session.createQuery("from FileMetadata where directory.id = :id",
                             FileMetadata.class).setParameter("id", directory.getId())
-                    .stream().map(FileMetadata::convertToFile).toList();
+                    .stream().toList();
 
             session.getTransaction().commit();
         }

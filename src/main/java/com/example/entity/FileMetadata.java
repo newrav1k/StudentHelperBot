@@ -16,8 +16,10 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,13 +46,7 @@ public class FileMetadata {
     @JoinColumn(name = "directory_id")
     private Directory directory;
 
-    @SneakyThrows
-    public static File convertToFile(FileMetadata fileMetadata) {
-        Path path = Files.createTempFile(null, fileMetadata.getTitle());
-        File file = path.toFile();
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(fileMetadata.getContent());
-        }
-        return file;
+    public static InputStream convertToInputStream(FileMetadata fileMetadata) {
+        return new ByteArrayInputStream(fileMetadata.getContent());
     }
 }

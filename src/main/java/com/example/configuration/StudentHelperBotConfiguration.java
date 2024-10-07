@@ -5,18 +5,16 @@ import com.example.controller.type.CallbackDataController;
 import com.example.controller.type.DocumentController;
 import com.example.controller.type.PhotoController;
 import com.example.controller.type.TextController;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+@Slf4j
 @Configuration
 public class StudentHelperBotConfiguration {
-    private static final Logger log = LogManager.getLogger(StudentHelperBotConfiguration.class);
-
     @Bean
     public TelegramBotsApi telegramBotsApi(StudentHelperBot studentHelperBot) throws TelegramApiException {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);

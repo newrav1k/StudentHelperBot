@@ -6,5 +6,5 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public interface StudentDao {
     void insert(Update update);
 
-    Student findById(Long id);
+    Student findById(Update update);
 }

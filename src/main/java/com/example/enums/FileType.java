@@ -11,7 +11,7 @@ public enum FileType {
     TXT("txt", DocumentType.TEXT),
 
     EXCEL("xlsx", DocumentType.MS_EXCEL),
-    PPTX("pptx", DocumentType.PPT);
+    PPTX("pptx", DocumentType.MS_POWERPOINT);
 
     private final String type;
     private final DocumentType documentType;

@@ -1,6 +1,7 @@
 package com.example.utils;
 
 import com.example.entity.Directory;
+import com.example.entity.FileMetadata;
 import com.example.enums.States;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,11 @@ import java.util.Map;
 public class InformationStorage {
     private Map<Long, States> userStates = new HashMap<>();
 
-    private Map<Long, File> previousFiles = new HashMap<>();
+    private Map<Long, File> previousTGFiles = new HashMap<>();
+
+    private Map<Long, java.io.File> previousIOFiles = new HashMap<>();
+
+    private Map<Long, FileMetadata> previousFileMetadata = new HashMap<>();
 
     private Map<Long, Directory> previousDirectories = new HashMap<>();
 
@@ -27,8 +32,16 @@ public class InformationStorage {
         return userStates.getOrDefault(id, States.ACTIVE);
     }
 
-    public File getFile(long id) {
-        return previousFiles.get(id);
+    public File getTGFile(long id) {
+        return previousTGFiles.get(id);
+    }
+
+    public java.io.File getIOFile(long id) {
+        return previousIOFiles.get(id);
+    }
+
+    public FileMetadata getFileMetadata(long id) {
+        return previousFileMetadata.get(id);
     }
 
     public Directory getDirectory(long id) {
@@ -44,9 +57,19 @@ public class InformationStorage {
         log.info("Пользователю {} установлено новое состояние - {}", id, state);
     }
 
-    public void putFile(long id, File file) {
-        previousFiles.put(id, file);
+    public void putTGFile(long id, File file) {
+        previousTGFiles.put(id, file);
         log.info("У пользователя {} обновлён последний файл - {}", id, file);
+    }
+
+    public void putIOFile(long id, java.io.File file) {
+        previousIOFiles.put(id, file);
+        log.info("У пользователя {} обновлён выбранный файл - {}", id, file);
+    }
+
+    public void putFileMetadata(long id, FileMetadata fileMetadata) {
+        previousFileMetadata.put(id, fileMetadata);
+        log.info("Пользователь {} выбрал файл - {}", id, fileMetadata.getTitle());
     }
 
     public void putDirectory(long id, Directory directory) {
@@ -60,7 +83,7 @@ public class InformationStorage {
 
     public void clearData(long id) {
         userStates.remove(id);
-        previousFiles.remove(id);
+        previousTGFiles.remove(id);
         previousDirectories.remove(id);
     }
 }
