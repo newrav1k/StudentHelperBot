@@ -13,16 +13,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.ToString;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Data
 @NoArgsConstructor
@@ -45,6 +39,10 @@ public class FileMetadata {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "directory_id")
     private Directory directory;
+
+    public String getExtension() {
+        return title.substring(title.lastIndexOf(".") + 1);
+    }
 
     public static InputStream convertToInputStream(FileMetadata fileMetadata) {
         return new ByteArrayInputStream(fileMetadata.getContent());

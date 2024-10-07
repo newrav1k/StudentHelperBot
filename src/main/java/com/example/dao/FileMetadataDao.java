@@ -14,6 +14,8 @@ public interface FileMetadataDao {
 
     void deleteBySerial(Student student, Directory directory, int serial);
 
+    void changeFileName(Student student, FileMetadata fileMetadata, String newFileName);
+
     void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata);
 
     FileMetadata findBySerial(Student student, Directory directory, int number);

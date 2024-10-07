@@ -52,6 +52,7 @@ public class CallbackDataController implements UpdateController {
                 case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
                 case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
                 case CALLBACK_DATA_CHANGE_FILE_DIRECTORY -> changeFileDirectoryProcess(update);
+                case CALLBACK_DATA_CHANGE_FILE_NAME -> changeFileNameProcess(update);
             }
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
@@ -127,6 +128,11 @@ public class CallbackDataController implements UpdateController {
 
     private void changeFileDirectoryProcess(Update update) {
         setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите перенести в другую директорию:"));
+        setUserStates(update, States.WAITING_FILE_NAME_FOR_CHOOSE);
+    }
+
+    private void changeFileNameProcess(Update update) {
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите переименовать:"));
         setUserStates(update, States.WAITING_FILE_NAME_FOR_CHANGE);
     }
 

@@ -10,12 +10,26 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class MessageUtils {
+
+    private static final Map<String, String> EMOJI_MAP = new HashMap<>();
+
+    static {
+        EMOJI_MAP.put("png", "🖼");
+        EMOJI_MAP.put("jpg", "🖼");
+        EMOJI_MAP.put("txt", "📜");
+        EMOJI_MAP.put("docx", "📘");
+        EMOJI_MAP.put("pptx", "📕");
+        EMOJI_MAP.put("xlsx", "📗");
+        EMOJI_MAP.put("pdf", "📓");
+    }
+
     public SendMessage generateSendMessageWithCallbackData(Update update, String text) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
@@ -104,7 +118,6 @@ public class MessageUtils {
         sendMessage.setReplyMarkup(markup);
 
         // Отправляем сообщение
-
         return sendMessage;
     }
 
@@ -172,35 +185,42 @@ public class MessageUtils {
 
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton button1 = new InlineKeyboardButton();
-        button1.setText("Добавить"); // Текст на кнопке
+        button1.setText("Загрузить файл"); // Текст на кнопке
         button1.setCallbackData("callback_data_add_file"); // Данные для обратного вызова
         row1.add(button1);
 
         InlineKeyboardButton button2 = new InlineKeyboardButton();
-        button2.setText("Скачать");
+        button2.setText("Скачать файл");
         button2.setCallbackData("callback_data_download_file");
         row1.add(button2);
 
         List<InlineKeyboardButton> row2 = new ArrayList<>();
         InlineKeyboardButton button3 = new InlineKeyboardButton();
-        button3.setText("Изменить");
+        button3.setText("Изменить директорию");
         button3.setCallbackData("callback_data_change_file_directory");
         row2.add(button3);
 
-        InlineKeyboardButton button4 = new InlineKeyboardButton();
-        button4.setText("Удалить");
-        button4.setCallbackData("callback_data_delete_file");
-        row2.add(button4);
-
         List<InlineKeyboardButton> row3 = new ArrayList<>();
+        InlineKeyboardButton button4 = new InlineKeyboardButton();
+        button4.setText("Поменять название");
+        button4.setCallbackData("callback_data_change_file_name");
+        row3.add(button4);
+
+        List<InlineKeyboardButton> row4 = new ArrayList<>();
         InlineKeyboardButton button5 = new InlineKeyboardButton();
-        button5.setText("Отмена");
-        button5.setCallbackData("callback_data_cancel");
-        row3.add(button5);
+        button5.setText("Удалить");
+        button5.setCallbackData("callback_data_delete_file");
+        row4.add(button5);
+
+        InlineKeyboardButton button6 = new InlineKeyboardButton();
+        button6.setText("Отмена");
+        button6.setCallbackData("callback_data_cancel");
+        row4.add(button6);
 
         rows.add(row1);
         rows.add(row2);
         rows.add(row3);
+        rows.add(row4);
         return rows;
     }
 
@@ -221,7 +241,7 @@ public class MessageUtils {
         StringBuilder directoriesForSendMessage = new StringBuilder();
         for (Directory directory : directories) {
             directoriesForSendMessage.append(directories.indexOf(directory) + 1)
-                    .append(". ").append(directory.getTitle()).append("\n");
+                    .append(") ").append(directory.getTitle()).append("🗂").append("\n");
         }
         return directoriesForSendMessage.toString();
     }
@@ -230,8 +250,12 @@ public class MessageUtils {
         StringBuilder filesForSendMessage = new StringBuilder();
         int i = 0;
         for (FileMetadata file : files) {
-            filesForSendMessage.append(i++ + 1)
-                    .append(". ").append(file.getTitle()).append("\n");
+            String fileName = file.getTitle();
+            filesForSendMessage.append(++i)
+                    .append(") ")
+                    .append(fileName, 0, (fileName.length() < 32 ? fileName.lastIndexOf(".") : fileName.lastIndexOf(".") / 2))
+                    .append(fileName.substring(fileName.lastIndexOf(".")))
+                    .append(EMOJI_MAP.getOrDefault(file.getExtension(), "")).append("\n");
         }
         return filesForSendMessage.toString();
     }

@@ -5,6 +5,7 @@ import com.example.controller.type.DocumentController;
 import com.example.controller.type.PhotoController;
 import com.example.controller.type.TextController;
 import com.example.utils.MessageUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +16,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+@Slf4j
 @Component
 @Repository
 public class ProcessController {
-    private static final Logger log = LoggerFactory.getLogger(ProcessController.class);
 
     private final MessageUtils messageUtils;
     private final ApplicationContext applicationContext;

@@ -55,6 +55,8 @@ public class TextController implements UpdateController {
                             case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
                             case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
                             case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
+                            case WAITING_FILE_NAME -> changingFileName(update, message);
+                            case WAITING_FILE_NAME_FOR_CHOOSE -> chooseFile(update, message);
                             case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
                             case WAITING_DIRECTORY_NAME_FOR_CHANGE -> chooseDirectoryForChange(update, message);
                             default -> producerProcess(update, message);
@@ -82,10 +84,10 @@ public class TextController implements UpdateController {
     private void setStartView(Update update) {
         Message message = update.getMessage();
         String text = String.format("""
-                        Привет, %s! Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!
-                        Кроме того, вы можете общаться со мной, как с ChatGPT.
+                        Привет, %s!👋🏻 Я — бот, который с радостью сохранит ваши готовые работы на сервере, чтобы вы могли получить их в любой момент!⏳
+                        Кроме того, вы можете общаться со мной, как с ChatGPT.💬
                         
-                        Чтобы узнать, какие функции уже доступны, введите команду /help.""",
+                        Чтобы узнать, какие функции уже доступны, введите команду /help.📋""",
                 message.getChat().getFirstName());
         setView(messageUtils.generateSendMessageWithText(update, text));
     }
@@ -95,10 +97,10 @@ public class TextController implements UpdateController {
                 """
                         ⚙️ Команды
                         
-                        /start — описание и перезапуск бота
-                        /upload_file — загрузка файла на сервер
-                        /show_directories — отобразить все директории
-                        /reset_state — сбросить состояние бота
+                        /start — описание и перезапуск бота📌
+                        /upload_file — загрузка файла на сервер📌
+                        /show_directories — отобразить все директории📌
+                        /reset_state — сбросить состояние бота📌
                         """);
         setView(sendMessage);
     }
@@ -118,6 +120,7 @@ public class TextController implements UpdateController {
     private void addDirectory(Update update, String message) {
         Student student = studentDao.findById(update);
         directoryDao.insert(student, message);
+        log.info("Пользователь {} создал директорию", student.getId());
         setView(messageUtils.generateSendMessageWithText(update,
                 "Директория успешно создана"));
         setUserStates(update, States.ACTIVE);
@@ -130,6 +133,7 @@ public class TextController implements UpdateController {
         } else {
             directoryDao.deleteByTitle(student, message);
         }
+        log.info("Пользователь {} удаляет директорию", student.getId());
         setView(messageUtils.generateSendMessageWithText(update, "Директория была успешно удалена"));
         setUserStates(update, States.ACTIVE);
     }
@@ -140,6 +144,7 @@ public class TextController implements UpdateController {
                 directoryDao.findBySerial(student, Integer.parseInt(message)) :
                 directoryDao.findByTitle(student, message);
         informationStorage.putDirectory(student.getId(), directory);
+        log.info("Обновлён последний документ у пользователя {}", student.getId());
 
         setView(messageUtils.generateSendMessageForFiles(update,
                 fileMetadataDao.findAll(student, directory), directory));
@@ -163,12 +168,13 @@ public class TextController implements UpdateController {
         Directory directory = informationStorage.getDirectory(student.getId());
 
         fileMetadataDao.deleteBySerial(student, directory, Integer.parseInt(message));
+        log.info("Пользователь {} удалил файл", student.getId());
 
         setView(messageUtils.generateSendMessageWithText(update, "Файл успешно удален"));
         setUserStates(update, States.ACTIVE);
     }
 
-    private void chooseFileForChanging(Update update, String message) {
+    private void chooseFile(Update update, String message) {
         Student student = studentDao.findById(update);
         FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
 
@@ -176,6 +182,22 @@ public class TextController implements UpdateController {
 
         setView(messageUtils.generateSendMessageWithText(update, "Введите название директории, в которую хотите переместить файл:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
+    }
+
+    private void chooseFileForChanging(Update update, String message) {
+        Student student = studentDao.findById(update);
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
+        informationStorage.putFileMetadata(student.getId(), fileMetadata);
+        setView(messageUtils.generateSendMessageWithText(update, "Введите новое имя для файла:"));
+        setUserStates(update, States.WAITING_FILE_NAME);
+    }
+
+    private void changingFileName(Update update, String message) {
+        Student student = studentDao.findById(update);
+        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
+        fileMetadataDao.changeFileName(student, fileMetadata, message);
+        setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
+        setUserStates(update, States.ACTIVE);
     }
 
     private void chooseDirectoryForChange(Update update, String message) {

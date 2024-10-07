@@ -8,7 +8,6 @@ import com.example.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.telegram.telegrambots.meta.api.objects.Document;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -18,7 +17,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class FileMetadataDaoImpl implements FileMetadataDao {
@@ -78,6 +76,19 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
             session.beginTransaction();
 
             session.get(Directory.class, directory.getId()).getFilesMetadata().remove(serial - 1);
+
+            session.getTransaction().commit();
+        }
+    }
+
+    @Override
+    public void changeFileName(Student student, FileMetadata fileMetadata, String newFileName) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            session.createMutationQuery("update FileMetadata set title = :title where id = :id")
+                    .setParameter("title", newFileName + fileMetadata.getTitle().substring(fileMetadata.getTitle().lastIndexOf(".")))
+                    .setParameter("id", fileMetadata.getId()).executeUpdate();
 
             session.getTransaction().commit();
         }
