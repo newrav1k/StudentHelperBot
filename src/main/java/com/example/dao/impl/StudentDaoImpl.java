@@ -4,6 +4,7 @@ import com.example.dao.StudentDao;
 import com.example.entity.Directory;
 import com.example.entity.PersonalInfo;
 import com.example.entity.Student;
+import com.example.exception.StudentHelperBotException;
 import com.example.utils.HibernateUtil;
 import jakarta.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
@@ -46,8 +47,8 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public Student findById(Update update) {
-        Student student;
+    public Student findById(Update update) throws StudentHelperBotException {
+        Student student = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -57,6 +58,8 @@ public class StudentDaoImpl implements StudentDao {
                     .getSingleResult();
 
             session.getTransaction().commit();
+        } catch (NoResultException exception) {
+            insert(update);
         }
         return student;
     }

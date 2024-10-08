@@ -8,10 +8,7 @@ import java.util.HashMap;
 @Getter
 public enum FileType {
     WORD("docx", DocumentType.MS_WORD),
-    TXT("txt", DocumentType.TEXT),
-
-    EXCEL("xlsx", DocumentType.MS_EXCEL),
-    PPTX("pptx", DocumentType.MS_POWERPOINT);
+    TXT("txt", DocumentType.TEXT);
 
     private final String type;
     private final DocumentType documentType;

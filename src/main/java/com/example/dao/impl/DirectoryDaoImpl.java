@@ -3,6 +3,7 @@ package com.example.dao.impl;
 import com.example.dao.DirectoryDao;
 import com.example.entity.Directory;
 import com.example.entity.Student;
+import com.example.exception.StudentHelperBotException;
 import com.example.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
@@ -13,8 +14,10 @@ import java.util.List;
 @Slf4j
 public class DirectoryDaoImpl implements DirectoryDao {
 
+    private static final String DIRECTORY_NOT_FOUND = "Такая директория не найдена";
+
     @Override
-    public void insert(Student student, String title) {
+    public void insert(Student student, String title) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -24,11 +27,13 @@ public class DirectoryDaoImpl implements DirectoryDao {
             session.saveOrUpdate(directory);
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException("Не удалось создать директорию");
         }
     }
 
     @Override
-    public void update(Student student, String title) {
+    public void update(Student student, String title) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -38,11 +43,13 @@ public class DirectoryDaoImpl implements DirectoryDao {
                     .executeUpdate();
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }
     }
 
     @Override
-    public void deleteByTitle(Student student, String title) {
+    public void deleteByTitle(Student student, String title) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -52,22 +59,26 @@ public class DirectoryDaoImpl implements DirectoryDao {
                     .executeUpdate();
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }
     }
 
     @Override
-    public void deleteBySerial(Student student, int serial) {
+    public void deleteBySerial(Student student, int serial) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             session.get(Student.class, student.getId()).getDirectories().remove(serial - 1);
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }
     }
 
     @Override
-    public Directory findByTitle(Student student, String title) {
+    public Directory findByTitle(Student student, String title) throws StudentHelperBotException {
         Directory directory;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
@@ -78,12 +89,14 @@ public class DirectoryDaoImpl implements DirectoryDao {
                     .getSingleResult();
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }
         return directory;
     }
 
     @Override
-    public Directory findBySerial(Student student, int serial) {
+    public Directory findBySerial(Student student, int serial) throws StudentHelperBotException {
         Directory directory;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
@@ -93,18 +106,22 @@ public class DirectoryDaoImpl implements DirectoryDao {
             directory = user.getDirectories().get(serial - 1);
 
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }
         return directory;
     }
 
     @Override
-    public List<Directory> findAll(Student student) {
+    public List<Directory> findAll(Student student) throws StudentHelperBotException {
         List<Directory> directories;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
             directories = new ArrayList<>(session.createQuery("from Directory where student.id = :id", Directory.class)
                     .setParameter("id", student.getId()).list());
             session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException("Не удалось отобразить список директорий");
         }
         return directories;
     }

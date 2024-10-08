@@ -8,6 +8,7 @@ import com.example.controller.UpdateController;
 import com.example.entity.Student;
 import com.example.enums.FileType;
 import com.example.enums.States;
+import com.example.exception.StudentHelperBotException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -50,6 +51,8 @@ public class DocumentController implements UpdateController {
             }
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
+        } catch (StudentHelperBotException exception) {
+            setView(messageUtils.generateSendMessageWithText(update, exception.getMessage()));
         }
     }
 
@@ -69,18 +72,24 @@ public class DocumentController implements UpdateController {
         setView(messageUtils.generateSendMessageForDocument(update));
     }
 
-    public void converter(Update update) throws TelegramApiException, IOException {
+    ///java.lang.NullPointerException: Cannot invoke "com.example.enums.FileType.getDocumentType()" because "fileType" is null
+    /// 	at com.example.controller.type.DocumentController.converter(DocumentController.java:83) ~[classes/:na]
+    public void converter(Update update) throws TelegramApiException, IOException, StudentHelperBotException {
         Document document = informationStorage.getDocument(update.getCallbackQuery().getFrom().getId());
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
 
-        java.io.File wordFile = studentHelperBot.downloadFile(execute);
+        java.io.File file = studentHelperBot.downloadFile(execute);
         java.io.File pdfFile = Files.createTempFile(document.getFileName().split("\\.")[0], ".pdf").toFile();
 
         IConverter converter = LocalConverter.builder().build();
 
         FileType fileType = FileType.fromString(document.getFileName().split("\\.")[1]);
 
-        converter.convert(wordFile).as(fileType.getDocumentType())
+        if (fileType == null) {
+            throw new StudentHelperBotException("Данный тип файла я не могу конвертировать");
+        }
+
+        converter.convert(file).as(fileType.getDocumentType())
                 .to(pdfFile).as(DocumentType.PDF)
                 .execute();
 
@@ -88,13 +97,14 @@ public class DocumentController implements UpdateController {
 
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(update.getCallbackQuery().getFrom().getId());
-        sendDocument.setDocument(new InputFile(pdfFile));
+        sendDocument.setDocument(new InputFile());
+
         studentHelperBot.execute(sendDocument);
 
         pdfFile.deleteOnExit();
     }
 
-    private void saveProcess(Update update) throws TelegramApiException {
+    private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
         Student student = studentDao.findById(update);
         Document document = update.getMessage().getDocument();
 

@@ -5,6 +5,7 @@ import com.example.controller.UpdateController;
 import com.example.entity.Student;
 import com.example.enums.CallbackData;
 import com.example.enums.States;
+import com.example.exception.StudentHelperBotException;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,8 @@ public class CallbackDataController implements UpdateController {
             }
         } catch (TelegramApiException exception) {
             log.error(exception.getMessage());
+        } catch (StudentHelperBotException exception) {
+            setView(messageUtils.generateSendMessageWithText(update, exception.getMessage()));
         }
     }
 
@@ -71,14 +74,14 @@ public class CallbackDataController implements UpdateController {
         log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
     }
 
-    private void saveProcess(Update update) throws TelegramApiException {
+    private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
         Student student = studentDao.findById(update);
         File previousFile = informationStorage.getTGFile(student.getId());
         java.io.File file = studentHelperBot.downloadFile(previousFile);
 
         Document document = informationStorage.getDocument(student.getId());
 
-        fileMetadataDao.insert(update, informationStorage.getDirectory(update.getCallbackQuery().getFrom().getId()), file, document);
+        fileMetadataDao.insert(update, null, file, document);
         setView(messageUtils.generateSendMessageWithCallbackData(update,
                 "Файл успешно сохранён"));
     }
@@ -89,6 +92,8 @@ public class CallbackDataController implements UpdateController {
             context.getBean(DocumentController.class).converter(update);
         } catch (TelegramApiException | IOException exception) {
             log.error(exception.getMessage());
+        } catch (StudentHelperBotException exception) {
+            setView(messageUtils.generateSendMessageWithCallbackData(update, exception.getMessage()));
         }
     }
 
