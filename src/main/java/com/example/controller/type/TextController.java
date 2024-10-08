@@ -43,6 +43,7 @@ public class TextController implements UpdateController {
         String message = update.getMessage().getText();
 
         if (Arrays.asList(STOP_WORDS).contains(message)) {
+            setUserStates(update, States.ACTIVE);
             return;
         }
 
@@ -55,20 +56,20 @@ public class TextController implements UpdateController {
                 }
                 case HELP -> setHelpView(update);
                 case RESET_STATE -> resetState(update, id);
-                case UPLOAD_FILE -> updateFile(update);
+                case UPLOAD_FILE -> processingFile(update);
                 case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
                 default -> {
                     if (states != States.ACTIVE) {
                         switch (states) {
                             case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
                             case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
-                            case WAITING_DIRECTORY_NAME_CHOOSE -> setShowFilesView(update, message);
-                            case WAITING_FILE_NAME_DOWNLOAD -> downloadFile(update, message);
+                            case WAITING_DIRECTORY_NAME_CHOOSE -> outputFiles(update, message);
+                            case WAITING_FILE_NAME_DOWNLOAD -> uploadFile(update, message);
                             case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
-                            case WAITING_FILE_NAME -> changingFileName(update, message);
-                            case WAITING_FILE_NAME_FOR_CHOOSE -> chooseFile(update, message);
-                            case WAITING_FILE_NAME_FOR_CHANGE -> chooseFileForChanging(update, message);
-                            case WAITING_DIRECTORY_NAME_FOR_CHANGE -> chooseDirectoryForChange(update, message);
+                            case WAITING_FILE_NAME -> renameFile(update, message);
+                            case WAITING_FILE_NAME_FOR_CHOOSE -> selectFileToMove(update, message);
+                            case WAITING_FILE_NAME_FOR_CHANGE -> selectFileToRename(update, message);
+                            case WAITING_DIRECTORY_NAME_FOR_CHANGE -> selectDirectoryToReceiveFile(update, message);
                             default -> producerProcess(update, message);
                         }
                     }
@@ -109,16 +110,16 @@ public class TextController implements UpdateController {
                 """
                         ⚙️ Команды
                         
-                        /start — описание и перезапуск бота📌
-                        /upload_file — загрузка файла на сервер📌
-                        /show_directories — отобразить все директории📌
-                        /reset_state — сбросить состояние бота📌
+                        /start — описание и перезапуск бота 📌
+                        /upload_file — загрузка файла на сервер 📌
+                        /show_directories — отобразить все директории 📌
+                        /reset_state — сбросить состояние бота 📌
                         """);
         setView(sendMessage);
     }
 
-    private void setUploadFileView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageForDocumentSelection(update,
+    private void processingFileView(Update update) {
+        SendMessage sendMessage = messageUtils.generateSendMessageLookingForward(update,
                 "Загрузите файл, который хотите сохранить");
         setView(sendMessage);
     }
@@ -150,7 +151,7 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void setShowFilesView(Update update, String message) throws StudentHelperBotException {
+    private void outputFiles(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
         Directory directory = StringUtils.isNumeric(message) ?
                 directoryDao.findBySerial(student, Integer.parseInt(message)) :
@@ -163,15 +164,17 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void downloadFile(Update update, String message) throws TelegramApiException, StudentHelperBotException {
+    private void uploadFile(Update update, String message) throws TelegramApiException, StudentHelperBotException {
         Student student = studentDao.findById(update);
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
+        Directory directory = informationStorage.getDirectory(student.getId());
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
 
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(update.getMessage().getChat().getId());
         sendDocument.setDocument(new InputFile(FileMetadata.convertToInputStream(fileMetadata), fileMetadata.getTitle()));
 
         studentHelperBot.execute(sendDocument);
+
         setUserStates(update, States.ACTIVE);
     }
 
@@ -186,33 +189,39 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void chooseFile(Update update, String message) throws StudentHelperBotException {
+    private void selectFileToMove(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
+        Directory directory = informationStorage.getDirectory(student.getId());
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
 
         informationStorage.putFileMetadata(student.getId(), fileMetadata);
 
-        setView(messageUtils.generateSendMessageWithText(update, "Введите название директории, в которую хотите переместить файл:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Введите название директории, в которую хотите переместить файл:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
     }
 
-    private void chooseFileForChanging(Update update, String message) throws StudentHelperBotException {
+    private void selectFileToRename(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, informationStorage.getDirectory(student.getId()), Integer.parseInt(message));
+        Directory directory = informationStorage.getDirectory(student.getId());
+        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
+
         informationStorage.putFileMetadata(student.getId(), fileMetadata);
-        setView(messageUtils.generateSendMessageWithText(update, "Введите новое имя для файла:"));
+
+        setView(messageUtils.generateSendMessageLookingForward(update, "Введите новое имя для файла:"));
         setUserStates(update, States.WAITING_FILE_NAME);
     }
 
-    private void changingFileName(Update update, String message) throws StudentHelperBotException {
+    private void renameFile(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
         FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
+
         fileMetadataDao.changeFileName(student, fileMetadata, message);
+
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);
     }
 
-    private void chooseDirectoryForChange(Update update, String message) throws StudentHelperBotException {
+    private void selectDirectoryToReceiveFile(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
         Directory directory = StringUtils.isNumeric(message) ?
                 directoryDao.findBySerial(student, Integer.parseInt(message)) :
@@ -223,8 +232,8 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void updateFile(Update update) {
-        setUploadFileView(update);
+    private void processingFile(Update update) {
+        processingFileView(update);
         setUserStates(update, States.WAITING_FILE_NAME_ADD);
     }
 

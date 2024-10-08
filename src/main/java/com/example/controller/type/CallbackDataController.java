@@ -102,42 +102,42 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void addDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Введите название новой директории:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Введите название новой директории:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_ADD);
     }
 
     private void chooseDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите директорию, в которую хотите перейти:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите директорию, в которую хотите перейти:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_CHOOSE);
     }
 
     private void deleteDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите директорию, которую хотите удалить:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите директорию, которую хотите удалить:"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE);
     }
 
     private void addFileProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Загрузите файл, который хотите добавить:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Загрузите файл, который хотите добавить:"));
         setUserStates(update, States.WAITING_FILE_NAME_ADD);
     }
 
     private void downloadFileProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите скачать:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите файл, который хотите скачать:"));
         setUserStates(update, States.WAITING_FILE_NAME_DOWNLOAD);
     }
 
     private void deleteFileProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите удалить:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите файл, который хотите удалить:"));
         setUserStates(update, States.WAITING_FILE_NAME_DELETE);
     }
 
     private void changeFileDirectoryProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите перенести в другую директорию:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите файл, который хотите перенести в другую директорию:"));
         setUserStates(update, States.WAITING_FILE_NAME_FOR_CHOOSE);
     }
 
     private void changeFileNameProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Выберите файл, который хотите переименовать:"));
+        setView(messageUtils.generateSendMessageLookingForward(update, "Выберите файл, который хотите переименовать:"));
         setUserStates(update, States.WAITING_FILE_NAME_FOR_CHANGE);
     }
 

@@ -63,7 +63,7 @@ public class MessageUtils {
         return sendMessage;
     }
 
-    public SendMessage generateSendMessageForDocumentSelection(Update update, String suggestion) {
+    public SendMessage generateSendMessageLookingForward(Update update, String suggestion) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = actionSelection();
 
@@ -73,7 +73,7 @@ public class MessageUtils {
         CallbackDataController.setInlineKeyboardText(suggestion);
 
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getMessage().getChatId());
+        sendMessage.setChatId(update.hasCallbackQuery() ? update.getCallbackQuery().getMessage().getChatId() : update.getMessage().getChatId());
         sendMessage.setText(suggestion);
         sendMessage.setReplyMarkup(markup);
 
@@ -241,7 +241,7 @@ public class MessageUtils {
         StringBuilder directoriesForSendMessage = new StringBuilder();
         for (Directory directory : directories) {
             directoriesForSendMessage.append(directories.indexOf(directory) + 1)
-                    .append(") ").append(directory.getTitle()).append("🗂").append("\n");
+                    .append(") ").append(directory.getTitle()).append(" 🗂").append("\n");
         }
         return directoriesForSendMessage.toString();
     }
@@ -254,7 +254,7 @@ public class MessageUtils {
             filesForSendMessage.append(++i)
                     .append(") ")
                     .append(fileName, 0, (fileName.length() < 32 ? fileName.lastIndexOf(".") : fileName.lastIndexOf(".") / 2))
-                    .append(fileName.substring(fileName.lastIndexOf(".")))
+                    .append(fileName.substring(fileName.lastIndexOf("."))).append(" ")
                     .append(EMOJI_MAP.getOrDefault(file.getExtension(), "")).append("\n");
         }
         return filesForSendMessage.toString();
