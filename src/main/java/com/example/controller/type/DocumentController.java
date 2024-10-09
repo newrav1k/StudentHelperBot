@@ -46,10 +46,11 @@ public class DocumentController implements UpdateController {
             informationStorage.putTGFile(id, file);
             switch (states) {
                 case ACTIVE -> producerProcess(update);
+                case CONVERT -> converter(update);
                 case WAITING_FILE_NAME_ADD -> saveProcess(update);
                 default -> log.error("Что-то пошло не так");
             }
-        } catch (TelegramApiException exception) {
+        } catch (TelegramApiException | IOException exception) {
             log.error(exception.getMessage());
         } catch (StudentHelperBotException exception) {
             setView(messageUtils.generateSendMessageWithText(update, exception.getMessage()));
@@ -72,22 +73,22 @@ public class DocumentController implements UpdateController {
         setView(messageUtils.generateSendMessageForDocument(update));
     }
 
-    ///java.lang.NullPointerException: Cannot invoke "com.example.enums.FileType.getDocumentType()" because "fileType" is null
-    /// 	at com.example.controller.type.DocumentController.converter(DocumentController.java:83) ~[classes/:na]
     public void converter(Update update) throws TelegramApiException, IOException, StudentHelperBotException {
-        Document document = informationStorage.getDocument(update.getCallbackQuery().getFrom().getId());
+        Student student = studentDao.findById(update);
+        Document document = informationStorage.getDocument(student.getId());
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
-
-        java.io.File file = studentHelperBot.downloadFile(execute);
-        java.io.File pdfFile = Files.createTempFile(document.getFileName().split("\\.")[0], ".pdf").toFile();
-
-        IConverter converter = LocalConverter.builder().build();
 
         FileType fileType = FileType.fromString(document.getFileName().split("\\.")[1]);
 
         if (fileType == null) {
             throw new StudentHelperBotException("Данный тип файла я не могу конвертировать");
         }
+        setView(messageUtils.generateSendMessageWithText(update, "Конвертируем файл..."));
+
+        java.io.File file = studentHelperBot.downloadFile(execute);
+        java.io.File pdfFile = Files.createTempFile(document.getFileName().split("\\.")[0], ".pdf").toFile();
+
+        IConverter converter = LocalConverter.builder().build();
 
         converter.convert(file).as(fileType.getDocumentType())
                 .to(pdfFile).as(DocumentType.PDF)
@@ -96,8 +97,8 @@ public class DocumentController implements UpdateController {
         converter.shutDown();
 
         SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(update.getCallbackQuery().getFrom().getId());
-        sendDocument.setDocument(new InputFile());
+        sendDocument.setChatId(student.getId());
+        sendDocument.setDocument(new InputFile(pdfFile));
 
         studentHelperBot.execute(sendDocument);
 

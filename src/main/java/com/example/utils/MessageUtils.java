@@ -8,7 +8,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -119,6 +122,27 @@ public class MessageUtils {
 
         // Отправляем сообщение
         return sendMessage;
+    }
+
+    public ReplyKeyboardMarkup getMainMenuKeyboard() {
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("Загрузить файл"));
+        row1.add(new KeyboardButton("Конвертировать файл"));
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("Отобразить директории"));
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row1);
+        keyboard.add(row2);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        return replyKeyboardMarkup;
     }
 
     private List<List<InlineKeyboardButton>> uploadingFile() {
@@ -255,7 +279,7 @@ public class MessageUtils {
                     .append(") ")
                     .append(fileName, 0, (fileName.length() < 32 ? fileName.lastIndexOf(".") : fileName.lastIndexOf(".") / 2))
                     .append(fileName.substring(fileName.lastIndexOf("."))).append(" ")
-                    .append(EMOJI_MAP.getOrDefault(file.getExtension(), "")).append("\n");
+                    .append(EMOJI_MAP.getOrDefault(file.getExtension(), "⚙")).append("\n");
         }
         return filesForSendMessage.toString();
     }

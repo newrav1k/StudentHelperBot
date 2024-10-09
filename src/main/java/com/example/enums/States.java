@@ -2,6 +2,7 @@ package com.example.enums;
 
 public enum States {
     ACTIVE,
+    CONVERT,
     WAITING_DIRECTORY_NAME_ADD,
     WAITING_DIRECTORY_NAME_DELETE,
     WAITING_DIRECTORY_NAME_CHOOSE,
