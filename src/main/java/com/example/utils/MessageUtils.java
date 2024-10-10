@@ -5,6 +5,7 @@ import com.example.entity.Directory;
 import com.example.entity.FileMetadata;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -143,6 +144,35 @@ public class MessageUtils {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         return replyKeyboardMarkup;
+    }
+
+    public List<SendMessage> generateSendMessageAboutDevelopers(Update update) {
+        List<SendMessage> list = new ArrayList<>();
+        Long chatId = update.getMessage().getChatId();
+
+        SendMessage sendMessage1 = new SendMessage();
+        sendMessage1.setChatId(chatId);
+        sendMessage1.setText("""
+                Разработчик: Nisanchik
+                Почта: emildaniil@gmail.com
+                Телеграмм: @Nisan2004""");
+        LinkPreviewOptions linkPreviewOptions1 = new LinkPreviewOptions();
+        linkPreviewOptions1.setUrlField("https://github.com/Nisanchik");
+        sendMessage1.setLinkPreviewOptions(linkPreviewOptions1);
+        list.add(sendMessage1);
+
+        SendMessage sendMessage2 = new SendMessage();
+        sendMessage2.setChatId(chatId);
+        sendMessage2.setText("""
+                Разработчик: newrav1k
+                Почта: kritsky.academi@gmail.com
+                Телеграмм: @newrav1k""");
+        LinkPreviewOptions linkPreviewOptions2 = new LinkPreviewOptions();
+        linkPreviewOptions2.setUrlField("https://github.com/newrav1k");
+        sendMessage2.setLinkPreviewOptions(linkPreviewOptions2);
+        list.add(sendMessage2);
+
+        return list;
     }
 
     private List<List<InlineKeyboardButton>> uploadingFile() {

@@ -25,6 +25,7 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     public static final String START = "/start";
     public static final String UPLOAD_FILE = "/upload_file";
     public static final String SHOW_DIRECTORIES = "/show_directories";
+    public static final String DEVELOPERS = "/developers";
     public static final String RESET_STATE = "/reset_state";
     public static final String HELP = "/help";
 
@@ -47,6 +48,7 @@ public class StudentHelperBot extends TelegramLongPollingBot {
                 new BotCommand(UPLOAD_FILE, "Загрузить файл"),
                 new BotCommand(SHOW_DIRECTORIES, "Показать список директорий"),
                 new BotCommand(RESET_STATE, "Сбросить состояние бота"),
+                new BotCommand(DEVELOPERS, "Разработчики"),
                 new BotCommand(HELP, "Справка")
         ));
         try {

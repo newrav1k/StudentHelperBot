@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
 import static com.example.controller.StudentHelperBot.RESET_STATE;
 import static com.example.controller.StudentHelperBot.SHOW_DIRECTORIES;
@@ -47,11 +48,10 @@ public class TextController implements UpdateController {
                 }
                 case HELP -> setHelpView(update);
                 case RESET_STATE -> resetState(update, id);
-                case "Конвертировать файл" -> {
-                    convertFile(update);
-                }
+                case "Конвертировать файл" -> convertFile(update);
                 case UPLOAD_FILE, "Загрузить файл" -> processingFile(update);
                 case SHOW_DIRECTORIES, "Отобразить директории" -> setShowDirectoriesView(update);
+                case DEVELOPERS -> messageUtils.generateSendMessageAboutDevelopers(update).forEach(this::setView);
                 default -> {
                     if (states != States.ACTIVE) {
                         switch (states) {
