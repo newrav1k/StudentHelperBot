@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class FileMetadataDaoImpl implements FileMetadataDao {
@@ -46,7 +47,8 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
 
                     Directory dir = session.createQuery("from Directory where student.id = :id and title = :title", Directory.class)
                             .setParameter("id", user.getId())
-                            .setParameter("title", directory == null ? "Прочее" : directory.getTitle())
+                            .setParameter("title", Optional.ofNullable(directory)
+                                    .map(Directory::getTitle).orElse("Прочее"))
                             .getSingleResult();
                     student.addDirectory(dir);
 
@@ -164,7 +166,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
 
             session.getTransaction().commit();
         } catch (Exception exception) {
-            throw new StudentHelperBotException("Не удалось отобразить список не файлов", exception);
+            throw new StudentHelperBotException("Не удалось отобразить список файлов", exception);
         }
         return files;
     }

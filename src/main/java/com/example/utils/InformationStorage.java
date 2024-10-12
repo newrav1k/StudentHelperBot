@@ -15,7 +15,7 @@ import java.util.Map;
 @Data
 @Slf4j
 @Component
-public class InformationStorage {
+public class InformationStorage  {
     private Map<Long, States> userStates = new HashMap<>();
 
     private Map<Long, File> previousTGFiles = new HashMap<>();

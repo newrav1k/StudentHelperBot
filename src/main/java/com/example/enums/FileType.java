@@ -8,6 +8,7 @@ import java.util.HashMap;
 @Getter
 public enum FileType {
     WORD("docx", DocumentType.MS_WORD),
+    DOC("doc", DocumentType.DOC),
     TXT("txt", DocumentType.TEXT);
 
     private final String type;

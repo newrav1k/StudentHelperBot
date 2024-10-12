@@ -1,8 +1,7 @@
 package com.example.controller;
 
 import jakarta.annotation.PostConstruct;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -19,9 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @Component
 public class StudentHelperBot extends TelegramLongPollingBot {
-    private static final Logger log = LogManager.getLogger(StudentHelperBot.class);
 
     public static final String START = "/start";
     public static final String UPLOAD_FILE = "/upload_file";

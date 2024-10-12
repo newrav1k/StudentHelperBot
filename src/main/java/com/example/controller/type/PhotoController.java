@@ -46,7 +46,7 @@ public class PhotoController implements UpdateController {
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
-        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
+        log.info("Пользователю {} отправлено сообщение: {}", sendMessage.getChatId(), sendMessage.getText());
     }
 
     private void producerProcess(Update update) throws TelegramApiException {

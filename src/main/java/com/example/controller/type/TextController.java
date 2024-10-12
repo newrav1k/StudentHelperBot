@@ -2,24 +2,18 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
-import com.example.entity.Directory;
 import com.example.entity.FileMetadata;
 import com.example.entity.Student;
 import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
@@ -36,6 +30,7 @@ public class TextController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
+    @Async
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -57,6 +52,8 @@ public class TextController implements UpdateController {
                 default -> {
                     if (states != States.ACTIVE) {
                         switch (states) {
+                            case CONVERT -> setView(messageUtils.generateSendMessageWithText(update,
+                                    "Я не могу конвертировать текст! Отправьте документ"));
                             case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
                             case WAITING_FILE_NAME -> renameFile(update, message);
                             default -> producerProcess(update, message);
@@ -107,6 +104,17 @@ public class TextController implements UpdateController {
         setView(sendMessage);
     }
 
+    private void resetState(Update update, Long id) {
+        setUserStates(update, States.ACTIVE);
+        informationStorage.clearData(id);
+        setView(messageUtils.generateSendMessageWithText(update, "Состояние сброшено"));
+    }
+
+    private void processingFile(Update update) {
+        processingFileView(update);
+        setUserStates(update, States.WAITING_FILE_NAME_ADD);
+    }
+
     private void processingFileView(Update update) {
         SendMessage sendMessage = messageUtils.generateSendMessageLookingForward(update,
                 "Загрузите файл, который хотите сохранить");
@@ -142,18 +150,6 @@ public class TextController implements UpdateController {
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);
     }
-
-    private void processingFile(Update update) {
-        processingFileView(update);
-        setUserStates(update, States.WAITING_FILE_NAME_ADD);
-    }
-
-    private void resetState(Update update, Long id) {
-        setUserStates(update, States.ACTIVE);
-        informationStorage.clearData(id);
-        setView(messageUtils.generateSendMessageWithText(update, "Состояние сброшено"));
-    }
-
 
     private void producerProcess(Update update, String message) {
         setView(messageUtils.generateSendMessageWithText(update, message));

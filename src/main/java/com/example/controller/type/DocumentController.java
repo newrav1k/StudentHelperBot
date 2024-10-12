@@ -5,21 +5,19 @@ import com.documents4j.api.IConverter;
 import com.documents4j.job.LocalConverter;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.entity.Directory;
 import com.example.entity.Student;
 import com.example.enums.FileType;
 import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -37,6 +35,7 @@ public class DocumentController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
+    @Async
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -70,7 +69,7 @@ public class DocumentController implements UpdateController {
     @Override
     public void setView(SendMessage sendMessage) {
         studentHelperBot.sendAnswerMessage(sendMessage);
-        log.info("Пользователю {} отправлено сообщение", sendMessage.getChatId());
+        log.info("Пользователю {} отправлено сообщение: {}", sendMessage.getChatId(), sendMessage.getText());
     }
 
     private void producerProcess(Update update) {
@@ -87,7 +86,9 @@ public class DocumentController implements UpdateController {
         if (fileType == null) {
             throw new StudentHelperBotException("Данный тип файла я не могу конвертировать");
         }
-        setView(messageUtils.generateSendMessageWithText(update, "Конвертируем файл..."));
+        setView(update.hasCallbackQuery() ?
+                messageUtils.generateSendMessageWithCallbackData(update, "Конвертируем файл...") :
+                messageUtils.generateSendMessageWithText(update, "Конвертируем файл..."));
 
         java.io.File file = studentHelperBot.downloadFile(execute);
         java.io.File pdfFile = Files.createTempFile(document.getFileName().split("\\.")[0], ".pdf").toFile();
@@ -111,15 +112,15 @@ public class DocumentController implements UpdateController {
 
     private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
         Student student = studentDao.findById(update);
+        Directory directory = informationStorage.getDirectory(student.getId());
         Document document = update.getMessage().getDocument();
 
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
         java.io.File downloadFile = studentHelperBot.downloadFile(execute);
 
-        fileMetadataDao.insert(update, informationStorage.getDirectory(student.getId()), downloadFile, document);
+        fileMetadataDao.insert(update, directory, downloadFile, document);
         setView(messageUtils.generateSendMessageWithText(update,
                 "Файл успешно сохранён"));
         setUserStates(update, States.ACTIVE);
     }
-
 }
