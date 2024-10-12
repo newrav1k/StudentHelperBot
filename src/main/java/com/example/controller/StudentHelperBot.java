@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -29,6 +30,7 @@ public class StudentHelperBot extends TelegramLongPollingBot {
     public static final String HELP = "/help";
 
     private static final String SENDING_ERROR = "Не удалось отправить сообщение...{}";
+    private static final String DELETING_ERROR = "Не удалось удалить сообщение...{}";
 
     @Value("${bot.name}")
     private String botName;
@@ -89,6 +91,16 @@ public class StudentHelperBot extends TelegramLongPollingBot {
                 execute(message);
             } catch (TelegramApiException exception) {
                 log.error(SENDING_ERROR, exception.getMessage());
+            }
+        }
+    }
+
+    public void deleteMessage(DeleteMessage message) {
+        if (message != null) {
+            try {
+                execute(message);
+            } catch (TelegramApiException exception) {
+                log.error(DELETING_ERROR, exception.getMessage());
             }
         }
     }

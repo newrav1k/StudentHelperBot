@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -62,21 +64,12 @@ public class TextController implements UpdateController {
                     if (states != States.ACTIVE) {
                         switch (states) {
                             case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
-                            case WAITING_DIRECTORY_NAME_DELETE -> deleteDirectory(update, message);
-                            case WAITING_DIRECTORY_NAME_CHOOSE -> outputFiles(update, message);
-                            case WAITING_FILE_NAME_DOWNLOAD -> uploadFile(update, message);
-                            case WAITING_FILE_NAME_DELETE -> deleteFile(update, message);
                             case WAITING_FILE_NAME -> renameFile(update, message);
-                            case WAITING_FILE_NAME_FOR_CHOOSE -> selectFileToMove(update, message);
-                            case WAITING_FILE_NAME_FOR_CHANGE -> selectFileToRename(update, message);
-                            case WAITING_DIRECTORY_NAME_FOR_CHANGE -> selectDirectoryToReceiveFile(update, message);
                             default -> producerProcess(update, message);
                         }
                     }
                 }
             }
-        } catch (TelegramApiException exception) {
-            log.error(exception.getMessage());
         } catch (StudentHelperBotException exception) {
             setView(messageUtils.generateSendMessageWithText(update, exception.getMessage()));
         }
@@ -106,7 +99,7 @@ public class TextController implements UpdateController {
     }
 
     private void setHelpView(Update update) {
-        SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
+       SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
                 """
                         ⚙️ Команды
                         
@@ -139,78 +132,6 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
-    private void deleteDirectory(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        if (StringUtils.isNumeric(message)) {
-            directoryDao.deleteBySerial(student, Integer.parseInt(message));
-        } else {
-            directoryDao.deleteByTitle(student, message);
-        }
-        log.info("Пользователь {} удаляет директорию", student.getId());
-        setView(messageUtils.generateSendMessageWithText(update, "Директория была успешно удалена"));
-        setUserStates(update, States.ACTIVE);
-    }
-
-    private void outputFiles(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = StringUtils.isNumeric(message) ?
-                directoryDao.findBySerial(student, Integer.parseInt(message)) :
-                directoryDao.findByTitle(student, message);
-        informationStorage.putDirectory(student.getId(), directory);
-        log.info("Обновлён последний документ у пользователя {}", student.getId());
-
-        setView(messageUtils.generateSendMessageForFiles(update,
-                fileMetadataDao.findAll(student, directory), directory));
-        setUserStates(update, States.ACTIVE);
-    }
-
-    private void uploadFile(Update update, String message) throws TelegramApiException, StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
-
-        SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(update.getMessage().getChat().getId());
-        sendDocument.setDocument(new InputFile(FileMetadata.convertToInputStream(fileMetadata), fileMetadata.getTitle()));
-
-        studentHelperBot.execute(sendDocument);
-
-        setUserStates(update, States.ACTIVE);
-    }
-
-    private void deleteFile(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
-
-        fileMetadataDao.deleteBySerial(student, directory, Integer.parseInt(message));
-        log.info("Пользователь {} удалил файл", student.getId());
-
-        setView(messageUtils.generateSendMessageWithText(update, "Файл успешно удален"));
-        setUserStates(update, States.ACTIVE);
-    }
-
-    private void selectFileToMove(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
-
-        informationStorage.putFileMetadata(student.getId(), fileMetadata);
-
-        setView(messageUtils.generateSendMessageLookingForward(update, "Введите название директории, в которую хотите переместить файл:"));
-        setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE);
-    }
-
-    private void selectFileToRename(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
-        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(message));
-
-        informationStorage.putFileMetadata(student.getId(), fileMetadata);
-
-        setView(messageUtils.generateSendMessageLookingForward(update, "Введите новое имя для файла:"));
-        setUserStates(update, States.WAITING_FILE_NAME);
-    }
-
     private void renameFile(Update update, String message) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
         FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
@@ -218,17 +139,6 @@ public class TextController implements UpdateController {
         fileMetadataDao.changeFileName(student, fileMetadata, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
-        setUserStates(update, States.ACTIVE);
-    }
-
-    private void selectDirectoryToReceiveFile(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = StringUtils.isNumeric(message) ?
-                directoryDao.findBySerial(student, Integer.parseInt(message)) :
-                directoryDao.findByTitle(student, message);
-        fileMetadataDao.moveToDirectory(student, directory, informationStorage.getFileMetadata(student.getId()));
-
-        setView(messageUtils.generateSendMessageWithText(update, "Файл успешно перемещен"));
         setUserStates(update, States.ACTIVE);
     }
 
@@ -242,6 +152,7 @@ public class TextController implements UpdateController {
         informationStorage.clearData(id);
         setView(messageUtils.generateSendMessageWithText(update, "Состояние сброшено"));
     }
+
 
     private void producerProcess(Update update, String message) {
         setView(messageUtils.generateSendMessageWithText(update, message));

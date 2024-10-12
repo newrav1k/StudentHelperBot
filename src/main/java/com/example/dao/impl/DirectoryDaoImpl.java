@@ -5,11 +5,13 @@ import com.example.entity.Directory;
 import com.example.entity.Student;
 import com.example.exception.StudentHelperBotException;
 import com.example.utils.HibernateUtil;
+import jakarta.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class DirectoryDaoImpl implements DirectoryDao {
@@ -23,7 +25,8 @@ public class DirectoryDaoImpl implements DirectoryDao {
 
             Student user = session.get(Student.class, student.getId());
 
-            Directory directory = Directory.builder().title(title).student(user).build();
+            Directory directory = Optional.ofNullable(findByTitle(student, title)).orElse(Directory.builder().title(title).student(user).build());
+
             session.saveOrUpdate(directory);
 
             session.getTransaction().commit();
@@ -53,7 +56,7 @@ public class DirectoryDaoImpl implements DirectoryDao {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
-            session.createQuery("delete from Directory where student.id=:id and title=:title", Directory.class)
+            session.createMutationQuery("delete from Directory where student.id=:id and title=:title")
                     .setParameter("id", student.getId())
                     .setParameter("title", title)
                     .executeUpdate();
@@ -89,6 +92,8 @@ public class DirectoryDaoImpl implements DirectoryDao {
                     .getSingleResult();
 
             session.getTransaction().commit();
+        } catch (NoResultException exception) {
+            return null;
         } catch (Exception exception) {
             throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }

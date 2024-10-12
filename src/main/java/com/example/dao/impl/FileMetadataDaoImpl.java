@@ -89,6 +89,11 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
+    public void deleteByTitle(Student student, Directory directory, String title) {
+// Добавить реализацию удаления файла через title
+    }
+
+    @Override
     public void changeFileName(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();

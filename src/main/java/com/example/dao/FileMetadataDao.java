@@ -15,6 +15,8 @@ public interface FileMetadataDao {
 
     void deleteBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException;
 
+    void deleteByTitle(Student student, Directory directory, String title) throws StudentHelperBotException;
+
     void changeFileName(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException;
 
     void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata) throws StudentHelperBotException;

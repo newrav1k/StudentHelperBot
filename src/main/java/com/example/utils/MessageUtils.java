@@ -5,6 +5,7 @@ import com.example.entity.Directory;
 import com.example.entity.FileMetadata;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -84,13 +85,13 @@ public class MessageUtils {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getDirectoryRows();
 
-         // Устанавливаем кнопки в markup
+        // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
         String text = "Список директорий из базы данных:\n" + buildDirectoriesList(directories);
         CallbackDataController.setInlineKeyboardText(text);
 
-         // Создаем сообщение
+        // Создаем сообщение
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
         sendMessage.setText(text);
@@ -98,26 +99,6 @@ public class MessageUtils {
 
         // Отправляем сообщение
 
-        return sendMessage;
-    }
-
-    public SendMessage generateSendMessageForFiles(Update update, List<FileMetadata> files, Directory directory) {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = getFilesRows();
-
-         // Устанавливаем кнопки в markup
-        markup.setKeyboard(rows);
-
-        String text = directory.getTitle() + ":\n" + buildFilesList(files);
-        CallbackDataController.setInlineKeyboardText(text);
-
-         // Создаем сообщение
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText(text);
-        sendMessage.setReplyMarkup(markup);
-
-        // Отправляем сообщение
         return sendMessage;
     }
 
@@ -214,7 +195,7 @@ public class MessageUtils {
 
         InlineKeyboardButton button6 = new InlineKeyboardButton();
         button6.setText("Отмена");
-        button6.setCallbackData("callback_data_cancel");
+        button6.setCallbackData("callback_data_cancel_file");
         row4.add(button6);
 
         rows.add(row1);
@@ -258,5 +239,208 @@ public class MessageUtils {
                     .append(EMOJI_MAP.getOrDefault(file.getExtension(), "")).append("\n");
         }
         return filesForSendMessage.toString();
+    }
+
+    public EditMessageText editSendMessageForDirectories(Update update, List<Directory> directories) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getDirectoryRows();
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+
+        // Устанавливаем кнопки в markup
+        markup.setKeyboard(rows);
+
+        String text = "Список директорий из базы данных:\n" + buildDirectoriesList(directories);
+        CallbackDataController.setInlineKeyboardText(text);
+
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text);
+        editMessage.setReplyMarkup(markup);
+
+        // Отправляем сообщение
+
+        return editMessage;
+    }
+
+    public EditMessageText editDirectoriesMessageWithChooseButtons(Update update, String text, List<Directory> directories, String action) {
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+        CallbackDataController.setInlineKeyboardText(text);
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = directoriesActionInlineKeyboard(directories, action);
+
+        markup.setKeyboard(rows);
+
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text);
+        editMessage.setReplyMarkup(markup);
+
+        return editMessage;
+    }
+
+    private List<List<InlineKeyboardButton>> directoriesActionInlineKeyboard(List<Directory> directories, String action) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < directories.size(); i += 2) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            InlineKeyboardButton button1 = new InlineKeyboardButton();
+            button1.setText(directories.get(i).getTitle());
+            button1.setCallbackData("callback_data_" + action + "_" + directories.get(i).getTitle());
+            row.add(button1);
+            if (i + 1 < directories.size()) {
+                InlineKeyboardButton button2 = new InlineKeyboardButton();
+                button2.setText(directories.get(i + 1).getTitle());
+                button2.setCallbackData("callback_data_" + action + "_" + directories.get(i + 1).getTitle());
+                row.add(button2);
+            }
+            rows.add(row);
+
+        }
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Отмена");
+        button1.setCallbackData("callback_data_cancel_for_directories_action");
+        row1.add(button1);
+
+        rows.add(row1);
+
+        return rows;
+    }
+
+    public EditMessageText editSendMessageForFiles(Update update, List<FileMetadata> files, Directory directory) {
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getFilesRows();
+        EditMessageText editMessage = new EditMessageText();
+
+        String text = directory.getTitle() + ":\n" + buildFilesList(files);
+        CallbackDataController.setInlineKeyboardText(text);
+
+        markup.setKeyboard(rows);
+
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text);
+        editMessage.setReplyMarkup(markup);
+
+        return editMessage;
+    }
+
+    public EditMessageText editFilesMessageWithChooseButtons(Update update, String text, List<FileMetadata> files, String action) {
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+        CallbackDataController.setInlineKeyboardText(text);
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = filesActionInlineKeyboard(files, action);
+
+        EditMessageText editMessage = new EditMessageText();
+
+        markup.setKeyboard(rows);
+
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text);
+        editMessage.setReplyMarkup(markup);
+
+        return editMessage;
+    }
+
+    private List<List<InlineKeyboardButton>> filesActionInlineKeyboard(List<FileMetadata> files, String action) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < files.size(); i += 2) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            InlineKeyboardButton button1 = new InlineKeyboardButton();
+            button1.setText((i + 1) + ". " + files.get(i).getTitle());
+            button1.setCallbackData("callback_data_" + action + "_" + (i + 1));
+            row.add(button1);
+            if (i + 1 < files.size()) {
+                InlineKeyboardButton button2 = new InlineKeyboardButton();
+                button2.setText((i + 2) + ". " + files.get(i + 1).getTitle());
+                button2.setCallbackData("callback_data_" + action + "_" + (i + 2));
+                row.add(button2);
+            }
+
+            rows.add(row);
+        }
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Отмена");
+        button1.setCallbackData("callback_data_cancel_for_files_action");
+        row1.add(button1);
+
+        rows.add(row1);
+
+        return rows;
+    }
+
+    public EditMessageText directoryDeletionConfirmation(Update update, String text, Directory directory) {
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getConfirmationRows();
+        EditMessageText editMessage = new EditMessageText();
+
+        CallbackDataController.setInlineKeyboardText(text);
+
+        markup.setKeyboard(rows);
+
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text + " " + directory.getTitle() + "?");
+        editMessage.setReplyMarkup(markup);
+
+        return editMessage;
+    }
+
+    public EditMessageText fileDeletionConfirmation(Update update, String text, FileMetadata fileMetadata) {
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = getConfirmationRows();
+        EditMessageText editMessage = new EditMessageText();
+
+        CallbackDataController.setInlineKeyboardText(text);
+
+        markup.setKeyboard(rows);
+
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(messageId);
+        editMessage.setText(text + " " + fileMetadata.getTitle() + "?");
+        editMessage.setReplyMarkup(markup);
+
+        return editMessage;
+    }
+
+
+    private List<List<InlineKeyboardButton>> getConfirmationRows() {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText("Да"); // Текст на кнопке
+        button1.setCallbackData("callback_data_directory_confirmation_yes"); // Данные для обратного вызова
+        row1.add(button1);
+
+        InlineKeyboardButton button2 = new InlineKeyboardButton();
+        button2.setText("Нет");
+        button2.setCallbackData("callback_data_directory_confirmation_no");
+        row1.add(button2);
+
+        rows.add(row1);
+
+        return rows;
     }
 }
