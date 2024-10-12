@@ -21,8 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.Arrays;
-
+import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
 import static com.example.controller.StudentHelperBot.RESET_STATE;
 import static com.example.controller.StudentHelperBot.SHOW_DIRECTORIES;
@@ -35,19 +34,12 @@ import static com.example.controller.StudentHelperBot.UPLOAD_FILE;
 @Qualifier("textController")
 public class TextController implements UpdateController {
 
-    private static final String[] STOP_WORDS = new String[]{"/stop", "stop", "стоп"};
-
     private StudentHelperBot studentHelperBot;
 
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
         String message = update.getMessage().getText();
-
-        if (Arrays.asList(STOP_WORDS).contains(message)) {
-            setUserStates(update, States.ACTIVE);
-            return;
-        }
 
         States states = informationStorage.getState(id);
         try {
@@ -58,8 +50,10 @@ public class TextController implements UpdateController {
                 }
                 case HELP -> setHelpView(update);
                 case RESET_STATE -> resetState(update, id);
-                case UPLOAD_FILE -> processingFile(update);
-                case SHOW_DIRECTORIES -> setShowDirectoriesView(update);
+                case "Конвертировать файл" -> convertFile(update);
+                case UPLOAD_FILE, "Загрузить файл" -> processingFile(update);
+                case SHOW_DIRECTORIES, "Отобразить директории" -> setShowDirectoriesView(update);
+                case DEVELOPERS -> messageUtils.generateSendMessageAboutDevelopers(update).forEach(this::setView);
                 default -> {
                     if (states != States.ACTIVE) {
                         switch (states) {
@@ -95,7 +89,9 @@ public class TextController implements UpdateController {
                         
                         Чтобы узнать, какие функции уже доступны, введите команду /help.📋""",
                 message.getChat().getFirstName());
-        setView(messageUtils.generateSendMessageWithText(update, text));
+        SendMessage sendMessage = messageUtils.generateSendMessageWithText(update, text);
+        sendMessage.setReplyMarkup(messageUtils.getMainMenuKeyboard());
+        setView(sendMessage);
     }
 
     private void setHelpView(Update update) {
@@ -121,6 +117,11 @@ public class TextController implements UpdateController {
         Student student = studentDao.findById(update);
         setView(messageUtils.generateSendMessageForDirectories(update,
                 directoryDao.findAll(student)));
+    }
+
+    private void convertFile(Update update) {
+        setView(messageUtils.generateSendMessageWithText(update, "Загрузите файл, который хотите конвертировать:"));
+        setUserStates(update, States.CONVERT);
     }
 
     private void addDirectory(Update update, String message) throws StudentHelperBotException {

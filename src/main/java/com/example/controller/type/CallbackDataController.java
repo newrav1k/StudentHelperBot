@@ -107,7 +107,6 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void convertProcess(Update update) {
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Конвертируем файл..."));
         try {
             context.getBean(DocumentController.class).converter(update);
         } catch (TelegramApiException | IOException exception) {
@@ -339,7 +338,6 @@ public class CallbackDataController implements UpdateController {
                 fileMetadataDao.findAll(student, directory), directory));
     }
 
-    // Что-то придумать с удалением кнопок, сделать это лаконичнее
     private void deleteInlineKeyboard(Update update) {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
