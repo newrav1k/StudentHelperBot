@@ -26,7 +26,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     private static final String FILE_NOT_FOUND = "Такой файл не найден";
 
     @Override
-    public void insert(Update update, Directory directory, File file, Document document) throws StudentHelperBotException {
+    public synchronized void insert(Update update, Directory directory, File file, Document document) throws StudentHelperBotException {
         User user = receivedUser(update);
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
@@ -78,7 +78,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public void deleteBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException {
+    public synchronized void deleteBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -91,18 +91,29 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public void deleteByTitle(Student student, Directory directory, String title) {
-// Добавить реализацию удаления файла через title
+    public synchronized void deleteByTitle(Student student, Directory directory, String title) throws StudentHelperBotException {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            session.beginTransaction();
+
+            session.createMutationQuery("delete from FileMetadata where directory.id = :id and title = :title")
+                    .setParameter("id", directory.getId())
+                    .setParameter("title", title).executeUpdate();
+
+            session.getTransaction().commit();
+        } catch (Exception exception) {
+            throw new StudentHelperBotException(FILE_NOT_FOUND, exception);
+        }
     }
 
     @Override
-    public void changeFileName(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException {
+    public synchronized void renameFile(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
             session.createMutationQuery("update FileMetadata set title = :title where id = :id")
                     .setParameter("title", newFileName + fileMetadata.getTitle().substring(fileMetadata.getTitle().lastIndexOf(".")))
-                    .setParameter("id", fileMetadata.getId()).executeUpdate();
+                    .setParameter("id", fileMetadata.getId())
+                    .executeUpdate();
 
             session.getTransaction().commit();
         } catch (Exception exception) {
@@ -111,7 +122,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata) throws StudentHelperBotException {
+    public synchronized void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata) throws StudentHelperBotException {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
 
@@ -124,7 +135,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
         }
     }
 
-    ///java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
+    /// java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
     /// 	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:100) ~[na:na]
     /// 	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:106) ~[na:na]
     /// 	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:302) ~[na:na]
@@ -132,7 +143,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     /// 	at java.base/java.util.ArrayList.get(ArrayList.java:428) ~[na:na]
     /// 	at com.example.dao.impl.FileMetadataDaoImpl.findBySerial(FileMetadataDaoImpl.java:117) ~[classes/:na]
     @Override
-    public FileMetadata findBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException {
+    public synchronized FileMetadata findBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException {
         FileMetadata fileMetadata;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
@@ -155,7 +166,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
     }
 
     @Override
-    public List<FileMetadata> findAll(Student student, Directory directory) throws StudentHelperBotException {
+    public synchronized List<FileMetadata> findAll(Student student, Directory directory) throws StudentHelperBotException {
         List<FileMetadata> files;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();

@@ -29,13 +29,11 @@ import java.nio.file.Files;
 
 @Slf4j
 @Service
-@Repository
 @Qualifier("documentController")
 public class DocumentController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
-    @Async
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -77,8 +75,11 @@ public class DocumentController implements UpdateController {
     }
 
     public void converter(Update update) throws TelegramApiException, IOException, StudentHelperBotException {
+        log.info("обратился {}", update.getMessage().getFrom().getFirstName());
         Student student = studentDao.findById(update);
+        log.info("закончил {}", update.getMessage().getFrom().getFirstName());
         Document document = informationStorage.getDocument(student.getId());
+        log.info("зашёл в метод {}", student.getPersonalInfo());
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
 
         FileType fileType = FileType.fromString(document.getFileName().split("\\.")[1]);
@@ -95,6 +96,7 @@ public class DocumentController implements UpdateController {
 
         IConverter converter = LocalConverter.builder().build();
 
+        log.info("зашёл и вышел {}", student.getPersonalInfo());
         converter.convert(file).as(fileType.getDocumentType())
                 .to(pdfFile).as(DocumentType.PDF)
                 .execute();

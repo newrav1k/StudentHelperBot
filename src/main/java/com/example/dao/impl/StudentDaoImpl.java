@@ -16,7 +16,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 public class StudentDaoImpl implements StudentDao {
 
     @Override
-    public void insert(Update update) {
+    public synchronized void insert(Update update) {
         User user = update.getMessage().getFrom();
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
@@ -47,7 +47,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public Student findById(Update update) throws StudentHelperBotException {
+    public synchronized Student findById(Update update) throws StudentHelperBotException {
         Student student = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();

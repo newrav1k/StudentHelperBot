@@ -10,6 +10,7 @@ public enum CallbackData {
     CALLBACK_DATA_DELETE_DIRECTORY("callback_data_delete_directory"),
     CALLBACK_DATA_ADD_DIRECTORY("callback_data_add_directory"),
     CALLBACK_DATA_CHOOSE_DIRECTORY("callback_data_choose_directory"),
+    CALLBACK_DATA_CHANGE_DIRECTORY_NAME("callback_data_change_directory_name"),
     CALLBACK_DATA_ADD_FILE("callback_data_add_file"),
     CALLBACK_DATA_DOWNLOAD_FILE("callback_data_download_file"),
     CALLBACK_DATA_DELETE_FILE("callback_data_delete_file"),

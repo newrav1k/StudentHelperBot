@@ -17,7 +17,7 @@ public interface FileMetadataDao {
 
     void deleteByTitle(Student student, Directory directory, String title) throws StudentHelperBotException;
 
-    void changeFileName(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException;
+    void renameFile(Student student, FileMetadata fileMetadata, String newFileName) throws StudentHelperBotException;
 
     void moveToDirectory(Student student, Directory directory, FileMetadata fileMetadata) throws StudentHelperBotException;
 

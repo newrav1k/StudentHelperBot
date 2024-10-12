@@ -8,7 +8,6 @@ import com.example.utils.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -27,7 +26,6 @@ public class ProcessController {
         this.messageUtils = messageUtils;
     }
 
-    @Async
     public void processUpdate(Update update) {
         if (update == null) {
             log.error("Объект не может быть null");

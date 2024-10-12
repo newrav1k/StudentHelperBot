@@ -8,8 +8,6 @@ import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -24,13 +22,11 @@ import static com.example.controller.StudentHelperBot.UPLOAD_FILE;
 
 @Slf4j
 @Service
-@Repository
 @Qualifier("textController")
 public class TextController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
-    @Async
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -145,7 +141,7 @@ public class TextController implements UpdateController {
         Student student = studentDao.findById(update);
         FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
 
-        fileMetadataDao.changeFileName(student, fileMetadata, message);
+        fileMetadataDao.renameFile(student, fileMetadata, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);

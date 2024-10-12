@@ -5,7 +5,6 @@ import com.example.controller.UpdateController;
 import com.example.enums.States;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -16,7 +15,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
 @Service
-@Repository
 @Qualifier("photoController")
 public class PhotoController implements UpdateController {
 

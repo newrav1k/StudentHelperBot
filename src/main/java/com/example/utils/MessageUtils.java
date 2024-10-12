@@ -160,7 +160,6 @@ public class MessageUtils {
         List<SendMessage> list = new ArrayList<>();
         Long chatId = update.getMessage().getChatId();
 
-        SendMessage sendMessage1 = new SendMessage();
         InlineKeyboardMarkup markup1 = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows1 = new ArrayList<>();
         List<InlineKeyboardButton> buttons1 = new ArrayList<>();
@@ -169,8 +168,7 @@ public class MessageUtils {
                 Разработчик: Nisanchik
                 Почта: emildaniil@gmail.com
                 Телеграмм: @Nisan2004""";
-        sendMessage1.setChatId(chatId);
-        sendMessage1.setText(info1);
+        SendMessage sendMessage1 = new SendMessage(chatId.toString(), info1);
 
         MessageEntity developerEntity1 = new MessageEntity("bold", info1.indexOf("Разработчик"), 11);
         MessageEntity emailEntity1 = new MessageEntity("bold", info1.indexOf("Почта"), 5);
@@ -192,7 +190,6 @@ public class MessageUtils {
         sendMessage1.setLinkPreviewOptions(linkPreviewOptions1);
         list.add(sendMessage1);
 
-        SendMessage sendMessage2 = new SendMessage();
         InlineKeyboardMarkup markup2 = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows2 = new ArrayList<>();
         List<InlineKeyboardButton> buttons2 = new ArrayList<>();
@@ -201,8 +198,7 @@ public class MessageUtils {
                 Разработчик: newrav1k
                 Почта: kritsky.academi@gmail.com
                 Телеграмм: @newrav1k""";
-        sendMessage2.setChatId(chatId);
-        sendMessage2.setText(info2);
+        SendMessage sendMessage2 = new SendMessage(chatId.toString(), info2);
 
         MessageEntity developerEntity2 = new MessageEntity("bold", info2.indexOf("Разработчик"), 11);
         MessageEntity emailEntity2 = new MessageEntity("bold", info2.indexOf("Почта"), 5);
@@ -243,19 +239,27 @@ public class MessageUtils {
 
         List<InlineKeyboardButton> row2 = new ArrayList<>();
         InlineKeyboardButton button3 = new InlineKeyboardButton();
-        button3.setText("Удалить");
-        button3.setCallbackData("callback_data_delete_directory");
+        button3.setText("Переименовать");
+        button3.setCallbackData("callback_data_change_directory_name");
         row2.add(button3);
 
         List<InlineKeyboardButton> row3 = new ArrayList<>();
         InlineKeyboardButton button4 = new InlineKeyboardButton();
-        button4.setText("Отмена");
-        button4.setCallbackData("callback_data_cancel");
+        button4.setText("Удалить");
+        button4.setCallbackData("callback_data_delete_directory");
         row3.add(button4);
+
+        List<InlineKeyboardButton> row4 = new ArrayList<>();
+        InlineKeyboardButton button5 = new InlineKeyboardButton();
+        button5.setText("Отмена");
+        button5.setCallbackData("callback_data_cancel");
+        row4.add(button5);
 
         rows.add(row1);
         rows.add(row2);
         rows.add(row3);
+        rows.add(row4);
+
         return rows;
     }
 
@@ -334,7 +338,7 @@ public class MessageUtils {
                     .append(") ")
                     .append(fileName, 0, (fileName.length() < 32 ? fileName.lastIndexOf(".") : fileName.lastIndexOf(".") / 2))
                     .append(fileName.substring(fileName.lastIndexOf("."))).append(" ")
-                    .append(EMOJI_MAP.getOrDefault(file.getExtension(), "")).append("\n");
+                    .append(EMOJI_MAP.getOrDefault(file.getExtension(), "⚙")).append("\n");
         }
         return filesForSendMessage.toString();
     }
@@ -385,19 +389,8 @@ public class MessageUtils {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         for (int i = 0; i < directories.size(); i += 2) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            InlineKeyboardButton button1 = new InlineKeyboardButton();
-            button1.setText(directories.get(i).getTitle());
-            button1.setCallbackData("callback_data_" + action + "_" + directories.get(i).getTitle());
-            row.add(button1);
-            if (i + 1 < directories.size()) {
-                InlineKeyboardButton button2 = new InlineKeyboardButton();
-                button2.setText(directories.get(i + 1).getTitle());
-                button2.setCallbackData("callback_data_" + action + "_" + directories.get(i + 1).getTitle());
-                row.add(button2);
-            }
+            List<InlineKeyboardButton> row = getInlineKeyboardButtons(directories, action, i);
             rows.add(row);
-
         }
 
         List<InlineKeyboardButton> row1 = new ArrayList<>();
@@ -456,18 +449,7 @@ public class MessageUtils {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         for (int i = 0; i < files.size(); i += 2) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            InlineKeyboardButton button1 = new InlineKeyboardButton();
-            button1.setText((i + 1) + ". " + files.get(i).getTitle());
-            button1.setCallbackData("callback_data_" + action + "_" + (i + 1));
-            row.add(button1);
-            if (i + 1 < files.size()) {
-                InlineKeyboardButton button2 = new InlineKeyboardButton();
-                button2.setText((i + 2) + ". " + files.get(i + 1).getTitle());
-                button2.setCallbackData("callback_data_" + action + "_" + (i + 2));
-                row.add(button2);
-            }
-
+            List<InlineKeyboardButton> row = getKeyboardButtons(files, action, i);
             rows.add(row);
         }
 
@@ -522,7 +504,6 @@ public class MessageUtils {
         return editMessage;
     }
 
-
     private List<List<InlineKeyboardButton>> getConfirmationRows() {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
@@ -540,5 +521,35 @@ public class MessageUtils {
         rows.add(row1);
 
         return rows;
+    }
+
+    private static List<InlineKeyboardButton> getInlineKeyboardButtons(List<Directory> directories, String action, int i) {
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText(directories.get(i).getTitle());
+        button1.setCallbackData("callback_data_" + action + "_" + directories.get(i).getTitle());
+        row.add(button1);
+        if (i + 1 < directories.size()) {
+            InlineKeyboardButton button2 = new InlineKeyboardButton();
+            button2.setText(directories.get(i + 1).getTitle());
+            button2.setCallbackData("callback_data_" + action + "_" + directories.get(i + 1).getTitle());
+            row.add(button2);
+        }
+        return row;
+    }
+
+    private static List<InlineKeyboardButton> getKeyboardButtons(List<FileMetadata> files, String action, int i) {
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        InlineKeyboardButton button1 = new InlineKeyboardButton();
+        button1.setText((i + 1) + ". " + files.get(i).getTitle());
+        button1.setCallbackData("callback_data_" + action + "_" + (i + 1));
+        row.add(button1);
+        if (i + 1 < files.size()) {
+            InlineKeyboardButton button2 = new InlineKeyboardButton();
+            button2.setText((i + 2) + ". " + files.get(i + 1).getTitle());
+            button2.setCallbackData("callback_data_" + action + "_" + (i + 2));
+            row.add(button2);
+        }
+        return row;
     }
 }

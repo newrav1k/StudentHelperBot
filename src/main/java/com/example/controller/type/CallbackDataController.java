@@ -13,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -31,7 +29,6 @@ import java.util.Objects;
 
 @Slf4j
 @Service
-@Repository
 @Qualifier("callbackDataController")
 public class CallbackDataController implements UpdateController {
 
@@ -42,7 +39,6 @@ public class CallbackDataController implements UpdateController {
 
     private ApplicationContext context;
 
-    @Async
     @Override
     public void processUpdate(Update update) {
         long id = update.getCallbackQuery().getFrom().getId();
@@ -72,10 +68,12 @@ public class CallbackDataController implements UpdateController {
                             case CALLBACK_DATA_DOWNLOAD_FILE -> downloadFileProcess(update);
                             case CALLBACK_DATA_DELETE_FILE -> deleteFileProcess(update);
                             case CALLBACK_DATA_CHANGE_FILE_DIRECTORY -> selectFileForMovingProcess(update);
+                            case CALLBACK_DATA_CHANGE_DIRECTORY_NAME -> renameDirectoryProcess(update);
                             case CALLBACK_DATA_CHANGE_FILE_NAME -> renameFileProcess(update);
                             case CALLBACK_DATA_CANCEL_FILE -> cancelFromFilesListProcess(update);
                             case CALLBACK_DATA_DIRECTORY_CONFIRMATION_YES -> deleteDirectory(update);
                             case CALLBACK_DATA_DIRECTORY_CONFIRMATION_NO -> cancelDeletionDirectory(update);
+                            default -> log.error("Invalid callback query state");
                         }
                     }
                 }
@@ -233,11 +231,11 @@ public class CallbackDataController implements UpdateController {
             Student student = studentDao.findById(update);
             Directory directory = informationStorage.getDirectory(student.getId());
             // Расскомментировать, когда появиться удаление файла через title
-//        FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
-//
-//        informationStorage.putFileMetadata(student.getId(), fileMetadata);
-//
-//        studentHelperBot.sendEditMessage(messageUtils.fileDeletionConfirmation(update, "Вы действительно хотите удалить файл ", fileMetadata));
+            FileMetadata fileMetadata = fileMetadataDao.findBySerial(student, directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
+
+            informationStorage.putFileMetadata(student.getId(), fileMetadata);
+
+            studentHelperBot.sendEditMessage(messageUtils.fileDeletionConfirmation(update, "Вы действительно хотите удалить файл ", fileMetadata));
 
             fileMetadataDao.deleteBySerial(student, directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
 
@@ -247,17 +245,25 @@ public class CallbackDataController implements UpdateController {
         }
 
         setUserStates(update, States.ACTIVE);
+    }
 
-        }
+    /// Разобраться и уточнить строчку для ввода имени
+    private void renameDirectoryProcess(Update update) throws StudentHelperBotException {
+        Student student = studentDao.findById(update);
+        Directory directory = informationStorage.getDirectory(student.getId());
+
+        directoryDao.renameDirectory(student, directory, update.getCallbackQuery().getData().split("_")[1]);
+    }
 
     // Расскомментировать, когда появиться удаление файла через title
-//    private void deleteFile(Update update) throws StudentHelperBotException {
-//        Student student = studentDao.findById(update);
-//        FileMetadata fileMetadata  = informationStorage.getFileMetadata(student.getId());
-//
-//        fileMetadataDao.deleteByTitle(student, directory, fileMetadata.getTitle());
-//        setView(messageUtils.generateSendMessageWithCallbackData(update, "Файл успешно удален"));
-//    }
+    private void deleteFile(Update update) throws StudentHelperBotException {
+        Student student = studentDao.findById(update);
+        Directory directory = informationStorage.getDirectory(student.getId());
+        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
+
+        fileMetadataDao.deleteByTitle(student, directory, fileMetadata.getTitle());
+        setView(messageUtils.generateSendMessageWithCallbackData(update, "Файл успешно удален"));
+    }
 
     private void selectFileForMovingProcess(Update update) throws StudentHelperBotException {
         Student student = studentDao.findById(update);
