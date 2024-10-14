@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: StudentHelperBot
+
+bot:
+  name: newrav1k_bot
+  token: 5523304065:AAHi2fN-lv2pHVnnSPuynThC0c8lsKJXAYA
+
+#  name: Dandy_hot_bot
+#  token: 7787120361:AAEVBujNfyqSfp97akvUZowcvINTTqj7k2s
+
+logging:
+  level:
+    root: info
+  file:
+    name: StudentHelperBotLogging.txt
+    path: /
