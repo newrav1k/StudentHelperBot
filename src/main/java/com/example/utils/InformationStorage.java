@@ -35,16 +35,16 @@ public class InformationStorage  {
         return userStates.getOrDefault(id, States.ACTIVE);
     }
 
+    public Update getUpdate(long id) {
+        return previousUpdate.get(id);
+    }
+
     public File getTGFile(long id) {
         return previousTGFiles.get(id);
     }
 
     public java.io.File getIOFile(long id) {
         return previousIOFiles.get(id);
-    }
-
-    public Update getUpdate(long id) {
-        return previousUpdate.get(id);
     }
 
     public FileMetadata getFileMetadata(long id) {
@@ -64,6 +64,11 @@ public class InformationStorage  {
         log.info("Пользователю {} установлено новое состояние - {}", id, state);
     }
 
+    public void putUpdate(long id, Update update) {
+        previousUpdate.put(id, update);
+        log.info("У пользователя {} обновлен последний update {}", id, update);
+    }
+
     public void putTGFile(long id, File file) {
         previousTGFiles.put(id, file);
         log.info("У пользователя {} обновлён последний файл - {}", id, file);
@@ -72,11 +77,6 @@ public class InformationStorage  {
     public void putIOFile(long id, java.io.File file) {
         previousIOFiles.put(id, file);
         log.info("У пользователя {} обновлён выбранный файл - {}", id, file);
-    }
-
-    public void putUpdate(long id, Update update) {
-        previousUpdate.put(id, update);
-        log.info("У пользователя {} обновлен последний update {}", id, update);
     }
 
     public void putFileMetadata(long id, FileMetadata fileMetadata) {

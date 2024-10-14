@@ -4,6 +4,7 @@ import com.example.controller.type.CallbackDataController;
 import com.example.controller.type.DocumentController;
 import com.example.controller.type.PhotoController;
 import com.example.controller.type.TextController;
+import com.example.utils.InformationStorage;
 import com.example.utils.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +20,15 @@ public class ProcessController {
 
     private final MessageUtils messageUtils;
     private final ApplicationContext applicationContext;
+    private final InformationStorage informationStorage;
 
     @Autowired
-    public ProcessController(ApplicationContext applicationContext, MessageUtils messageUtils) {
+    public ProcessController(ApplicationContext applicationContext,
+                             MessageUtils messageUtils,
+                             InformationStorage informationStorage) {
         this.applicationContext = applicationContext;
         this.messageUtils = messageUtils;
+        this.informationStorage = informationStorage;
     }
 
     public void processUpdate(Update update) {
@@ -31,13 +36,17 @@ public class ProcessController {
             log.error("Объект не может быть null");
             return;
         }
+        long id = -1;
         if (update.hasCallbackQuery()) {
+            id = update.getCallbackQuery().getFrom().getId();
             processCallbackDataMessage(update);
         } else if (update.getMessage() != null) {
             distributeMessageByType(update);
+            id = update.getMessage().getFrom().getId();
         } else {
             log.error("Неизвестный тип сообщения {}", update);
         }
+        informationStorage.putUpdate(id, update);
     }
 
     private void distributeMessageByType(Update update) {
