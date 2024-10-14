@@ -16,10 +16,10 @@ public enum CallbackData {
     CALLBACK_DATA_DELETE_FILE("callback_data_delete_file"),
     CALLBACK_DATA_CHANGE_FILE_DIRECTORY("callback_data_change_file_directory"),
     CALLBACK_DATA_CHANGE_FILE_NAME("callback_data_change_file_name"),
-    CALLBACK_DATA_DIRECTORY_CONFIRMATION_YES("callback_data_directory_confirmation_yes"),
-    CALLBACK_DATA_DIRECTORY_CONFIRMATION_NO("callback_data_directory_confirmation_no"),
-    CALLBACK_DATA_FILE_CONFIRMATION_YES("callback_data_file_confirmation_yes"),
-    CALLBACK_DATA_FILE_CONFIRMATION_NO("callback_data_file_confirmation_no");
+    CALLBACK_DATA_CONFIRMATION_YES_DIRECTORY("callback_data_confirmation_yes_directory"),
+    CALLBACK_DATA_CONFIRMATION_NO_DIRECTORY("callback_data_confirmation_no_directory"),
+    CALLBACK_DATA_CONFIRMATION_YES_FILE("callback_data_confirmation_yes_file"),
+    CALLBACK_DATA_CONFIRMATION_NO_FILE("callback_data_confirmation_no_file");
 
     private final String title;
 

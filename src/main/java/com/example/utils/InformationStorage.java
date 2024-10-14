@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,8 @@ import java.util.Map;
 @Component
 public class InformationStorage  {
     private Map<Long, States> userStates = new HashMap<>();
+
+    private Map<Long, Update> previousUpdate = new HashMap<>();
 
     private Map<Long, File> previousTGFiles = new HashMap<>();
 
@@ -38,6 +41,10 @@ public class InformationStorage  {
 
     public java.io.File getIOFile(long id) {
         return previousIOFiles.get(id);
+    }
+
+    public Update getUpdate(long id) {
+        return previousUpdate.get(id);
     }
 
     public FileMetadata getFileMetadata(long id) {
@@ -65,6 +72,11 @@ public class InformationStorage  {
     public void putIOFile(long id, java.io.File file) {
         previousIOFiles.put(id, file);
         log.info("У пользователя {} обновлён выбранный файл - {}", id, file);
+    }
+
+    public void putUpdate(long id, Update update) {
+        previousUpdate.put(id, update);
+        log.info("У пользователя {} обновлен последний update {}", id, update);
     }
 
     public void putFileMetadata(long id, FileMetadata fileMetadata) {

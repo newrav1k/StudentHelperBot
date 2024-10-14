@@ -2,16 +2,22 @@ package com.example.controller.type;
 
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
+import com.example.entity.Directory;
 import com.example.entity.FileMetadata;
 import com.example.entity.Student;
 import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.io.IOException;
 
 import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
@@ -27,6 +33,8 @@ public class TextController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
 
+    private ApplicationContext context;
+
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -34,6 +42,9 @@ public class TextController implements UpdateController {
 
         States states = informationStorage.getState(id);
         try {
+//            Student student = studentDao.findById(update);
+//            Update updateForDeleting = informationStorage.getUpdate(student.getId());         //Добавить реализацию добавдения последнего апдейта
+//            deletingInlineKeyboardForCommand(updateForDeleting);
             switch (message) {
                 case START -> {
                     setStartView(update);
@@ -52,6 +63,7 @@ public class TextController implements UpdateController {
                                     "Я не могу конвертировать текст! Отправьте документ"));
                             case WAITING_DIRECTORY_NAME_ADD -> addDirectory(update, message);
                             case WAITING_FILE_NAME -> renameFile(update, message);
+                            case WAITING_DIRECTORY_NAME -> renameDirectory(update, message);
                             default -> producerProcess(update, message);
                         }
                     }
@@ -147,7 +159,26 @@ public class TextController implements UpdateController {
         setUserStates(update, States.ACTIVE);
     }
 
+    private void renameDirectory(Update update, String message) throws StudentHelperBotException {
+        Student student = studentDao.findById(update);
+        Directory directory = informationStorage.getDirectory(student.getId());
+
+        directoryDao.renameDirectory(student, directory, message);
+
+        setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
+        setUserStates(update, States.ACTIVE);
+    }
+
     private void producerProcess(Update update, String message) {
         setView(messageUtils.generateSendMessageWithText(update, message));
+    }
+
+    private void deletingInlineKeyboardForCommand(Update update) {
+        context.getBean(CallbackDataController.class).deleteInlineKeyboard(update);
+    }
+
+    @Autowired
+    public void setContext(ApplicationContext context) {
+        this.context = context;
     }
 }

@@ -469,7 +469,7 @@ public class MessageUtils {
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = getConfirmationRows();
+        List<List<InlineKeyboardButton>> rows = getConfirmationRows("directory");
         EditMessageText editMessage = new EditMessageText();
 
         CallbackDataController.setInlineKeyboardText(text);
@@ -489,7 +489,7 @@ public class MessageUtils {
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = getConfirmationRows();
+        List<List<InlineKeyboardButton>> rows = getConfirmationRows("file");
         EditMessageText editMessage = new EditMessageText();
 
         CallbackDataController.setInlineKeyboardText(text);
@@ -504,18 +504,18 @@ public class MessageUtils {
         return editMessage;
     }
 
-    private List<List<InlineKeyboardButton>> getConfirmationRows() {
+    private List<List<InlineKeyboardButton>> getConfirmationRows(String objectOfConfirmation) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton button1 = new InlineKeyboardButton();
         button1.setText("Да"); // Текст на кнопке
-        button1.setCallbackData("callback_data_directory_confirmation_yes"); // Данные для обратного вызова
+        button1.setCallbackData("callback_data_confirmation_yes_" + objectOfConfirmation); // Данные для обратного вызова
         row1.add(button1);
 
         InlineKeyboardButton button2 = new InlineKeyboardButton();
         button2.setText("Нет");
-        button2.setCallbackData("callback_data_directory_confirmation_no");
+        button2.setCallbackData("callback_data_confirmation_no_" + objectOfConfirmation);
         row1.add(button2);
 
         rows.add(row1);
