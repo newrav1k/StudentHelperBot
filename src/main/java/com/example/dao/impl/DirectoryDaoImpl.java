@@ -8,6 +8,7 @@ import com.example.utils.HibernateUtil;
 import jakarta.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +64,8 @@ public class DirectoryDaoImpl implements DirectoryDao {
                     .executeUpdate();
 
             session.getTransaction().commit();
+        } catch (ConstraintViolationException exception) {
+            throw new StudentHelperBotException("Такая директория уже существует", exception);
         } catch (Exception exception) {
             throw new StudentHelperBotException(DIRECTORY_NOT_FOUND, exception);
         }

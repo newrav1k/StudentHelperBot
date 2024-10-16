@@ -8,6 +8,7 @@ import com.example.exception.StudentHelperBotException;
 import com.example.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -58,7 +59,7 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
                     } else {
                         fileName = update.getMessage().getCaption() == null ? document.getFileName() :
                                 update.getMessage().getCaption() + "."
-                                        + document.getFileName().split("\\.")[1];
+                                + document.getFileName().split("\\.")[1];
                     }
 
                     FileMetadata fileMetadata = FileMetadata.builder()
@@ -72,6 +73,15 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
             session.getTransaction().commit();
         } catch (IOException exception) {
             log.error(exception.getMessage());
+        } catch (ConstraintViolationException exception) {
+            Document doc = new Document();
+            String[] split = document.getFileName().split("\\.");
+            String fileName = file.getName().split("\\.")[0];
+            doc.setFileName(fileName.length() < 32 ? fileName : fileName.substring(0, 32) + "." + split[split.length - 1]);
+            insert(update, directory, file, doc);
+            throw new StudentHelperBotException("К сожалению, файл с таким именем уже существует, " +
+                                                "поэтому я сохранил ваш файл под другим именем: " +
+                                                doc.getFileName(), exception);
         } catch (Exception exception) {
             throw new StudentHelperBotException("Не удалось сохранить файл", exception);
         }
@@ -116,6 +126,8 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
                     .executeUpdate();
 
             session.getTransaction().commit();
+        } catch (ConstraintViolationException exception) {
+            throw new StudentHelperBotException("Такой файл уже существует", exception);
         } catch (Exception exception) {
             throw new StudentHelperBotException("Не удалось переименовать файл", exception);
         }
