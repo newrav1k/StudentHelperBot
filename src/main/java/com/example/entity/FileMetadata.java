@@ -17,6 +17,8 @@ import lombok.ToString;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Serial;
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +27,11 @@ import java.io.InputStream;
 @Entity
 @ToString(exclude = "directory")
 @Table(name = "files", schema = "student_helper_bot")
-public class FileMetadata {
+public class FileMetadata implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -1715216232552386853L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

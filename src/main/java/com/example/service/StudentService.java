@@ -3,11 +3,10 @@ package com.example.service;
 import com.example.entity.Student;
 import com.example.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Update;
-
-import java.util.Optional;
 
 @Service
 public class StudentService {
@@ -20,12 +19,14 @@ public class StudentService {
     }
 
     @Transactional
-    public void save(Update update) {
-        studentRepository.save(update);
+    @Cacheable(value = "students", key = "#update.message.from.id")
+    public Student save(Update update) {
+        return studentRepository.save(update);
     }
 
     @Transactional
-    public Optional<Student> findById(long id) {
-        return studentRepository.findById(id);
+    @Cacheable(value = "students", key = "#id")
+    public Student findById(long id) {
+        return studentRepository.findById(id).orElse(null);
     }
 }

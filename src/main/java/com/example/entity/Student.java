@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +24,11 @@ import java.util.List;
 @Entity
 @ToString(exclude = "directories")
 @Table(name = "students", schema = "student_helper_bot")
-public class Student {
+public class Student implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -4566134069091476477L;
+
     @Id
     private Long id;
 

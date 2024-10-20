@@ -14,4 +14,6 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
 
     List<Directory> findAllByStudent(Student student);
 
+    Directory findByStudentAndTitle(Student student, String title);
+
 }

@@ -16,6 +16,7 @@ import java.io.Serializable;
 @Builder
 @Embeddable
 public class PersonalInfo implements Serializable {
+
     @Serial
     private static final long serialVersionUID = -816380305901534710L;
 

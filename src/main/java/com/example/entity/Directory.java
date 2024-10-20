@@ -18,6 +18,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +31,11 @@ import java.util.List;
 @EqualsAndHashCode(of = "title")
 @ToString(exclude = {"filesMetadata", "student"})
 @Table(name = "directories", schema = "student_helper_bot")
-public class Directory {
+public class Directory implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 6993200769925462263L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

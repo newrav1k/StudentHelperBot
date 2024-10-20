@@ -29,7 +29,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -118,11 +117,11 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        File previousFile = informationStorage.getTGFile(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        File previousFile = informationStorage.getTGFile(student.getId());
         java.io.File file = studentHelperBot.downloadFile(previousFile);
 
-        Document document = informationStorage.getDocument(student.orElseThrow().getId());
+        Document document = informationStorage.getDocument(student.getId());
 
         fileService.save(update, null, file, document);
         setView(messageUtils.generateSendMessageWithCallbackData(update,
@@ -149,9 +148,9 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void chooseDirectoryProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
         studentHelperBot.sendEditMessage(messageUtils.editDirectoriesMessageWithChooseButtons(update,
-                "Выберете директорию, в которую хотите перейти:", directoryService.findAll(student.orElseThrow()), "choose"));
+                "Выберете директорию, в которую хотите перейти:", directoryService.findAll(student), "choose"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_CHOOSE_IMPLEMENTATION);
     }
 
@@ -159,9 +158,9 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_directories_action")) {
             cancelFromDirectoriesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = directoryService.findByTitle(student.orElseThrow(), update.getCallbackQuery().getData().split("_")[3]);
-            informationStorage.putDirectory(student.orElseThrow().getId(), directory);
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = directoryService.findByTitle(student, update.getCallbackQuery().getData().split("_")[3]);
+            informationStorage.putDirectory(student.getId(), directory);
             studentHelperBot.sendEditMessage(messageUtils.editSendMessageForFiles(update,
                     fileService.findAll(directory), directory));
         }
@@ -169,9 +168,9 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void renameDirectoryProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
         studentHelperBot.sendEditMessage(messageUtils.editDirectoriesMessageWithChooseButtons(update,
-                "Выберете директорию, которую хотите переименовать:", directoryService.findAll(student.orElseThrow()), "rename"));
+                "Выберете директорию, которую хотите переименовать:", directoryService.findAll(student), "rename"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_CHANGE_IMPLEMENTATION);
     }
 
@@ -179,10 +178,10 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_directories_action")) {
             cancelFromDirectoriesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = directoryService.findByTitle(student.orElseThrow(), update.getCallbackQuery().getData().split("_")[3]);
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = directoryService.findByTitle(student, update.getCallbackQuery().getData().split("_")[3]);
 
-            informationStorage.putDirectory(student.orElseThrow().getId(), directory);
+            informationStorage.putDirectory(student.getId(), directory);
 
             setView(messageUtils.generateSendMessageLookingForward(update, "Введите новое имя для директории:"));
             setUserStates(update, States.WAITING_DIRECTORY_NAME);
@@ -190,9 +189,9 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void deleteDirectoryProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
         studentHelperBot.sendEditMessage(messageUtils.editDirectoriesMessageWithChooseButtons(update,
-                "Выберете директорию, которую хотите удалить:", directoryService.findAll(student.orElseThrow()), "delete"));
+                "Выберете директорию, которую хотите удалить:", directoryService.findAll(student), "delete"));
         setUserStates(update, States.WAITING_DIRECTORY_NAME_DELETE_IMPLEMENTATION);
     }
 
@@ -200,20 +199,23 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_directories_action")) {
             cancelFromDirectoriesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = directoryService.findByTitle(student.orElseThrow(), update.getCallbackQuery().getData().split("_")[3]);
-            informationStorage.putDirectory(student.orElseThrow().getId(), directory);
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = directoryService.findByTitle(student, update.getCallbackQuery().getData().split("_")[3]);
+            informationStorage.putDirectory(student.getId(), directory);
             studentHelperBot.sendEditMessage(messageUtils.directoryDeletionConfirmation(update, "Вы действительно хотите удалить директорию ", directory));
         }
         setUserStates(update, States.ACTIVE);
     }
 
     private void deleteDirectory(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
 
-        directoryService.deleteByTitle(student.orElseThrow(), directory.getTitle());
-        setView(messageUtils.generateSendMessageWithCallbackData(update, "Директория успешно удалена"));
+        directoryService.deleteByTitle(student, directory.getTitle());
+
+        SendMessage sendMessage = messageUtils.generateSendMessageWithCallbackData(update, "Директория успешно удалена");
+        sendMessage.setReplyMarkup(messageUtils.getMainMenuKeyboard());
+        setView(sendMessage);
     }
 
     private void cancelDeletionDirectory(Update update) {
@@ -226,8 +228,8 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void downloadFileProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         studentHelperBot.sendEditMessage(messageUtils.editFilesMessageWithChooseButtons(update,
                 "Выберете файл, который хотите скачать:",
                 fileService.findAll(directory),
@@ -239,8 +241,8 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_files_action")) {
             cancelFromFilesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = informationStorage.getDirectory(student.getId());
             FileMetadata fileMetadata = fileService.findBySerial(directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
 
             SendDocument sendDocument = new SendDocument();
@@ -254,8 +256,8 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void deleteFileProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         studentHelperBot.sendEditMessage(messageUtils.editFilesMessageWithChooseButtons(update,
                 "Выберете файл, который хотите удалить:",
                 fileService.findAll(directory),
@@ -267,12 +269,12 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_files_action")) {
             cancelFromFilesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = informationStorage.getDirectory(student.getId());
 
             FileMetadata fileMetadata = fileService.findBySerial(directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
 
-            informationStorage.putFileMetadata(student.orElseThrow().getId(), fileMetadata);
+            informationStorage.putFileMetadata(student.getId(), fileMetadata);
 
             studentHelperBot.sendEditMessage(messageUtils.fileDeletionConfirmation(update, "Вы действительно хотите удалить файл ", fileMetadata));
         }
@@ -281,9 +283,9 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void deleteFile(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.orElseThrow().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
 
         fileService.deleteByTitle(directory, fileMetadata.getTitle());
 
@@ -295,8 +297,8 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void selectFileForMovingProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         studentHelperBot.sendEditMessage(messageUtils.editFilesMessageWithChooseButtons(update,
                 "Выберите файл, который хотите перенести в другую директорию:",
                 fileService.findAll(directory),
@@ -309,15 +311,15 @@ public class CallbackDataController implements UpdateController {
             cancelFromFilesChooseAction(update);
             setUserStates(update, States.ACTIVE);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = informationStorage.getDirectory(student.getId());
             FileMetadata fileMetadata = fileService.findBySerial(directory,
                     Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
 
-            informationStorage.putFileMetadata(student.orElseThrow().getId(), fileMetadata);
+            informationStorage.putFileMetadata(student.getId(), fileMetadata);
 
             studentHelperBot.sendEditMessage(messageUtils.editDirectoriesMessageWithChooseButtons(update,
-                    "Выберете директорию, в которую хотите переместить файл:", directoryService.findAll(student.orElseThrow()), "move"));
+                    "Выберете директорию, в которую хотите переместить файл:", directoryService.findAll(student), "move"));
             setUserStates(update, States.WAITING_DIRECTORY_NAME_FOR_MOVING_IMPLEMENTATION);
         }
     }
@@ -326,10 +328,10 @@ public class CallbackDataController implements UpdateController {
         if (Objects.equals(update.getCallbackQuery().getData(), "callback_data_cancel_for_directories_action")) {
             cancelFromFilesChooseAction(update);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = directoryService.findByTitle(student.orElseThrow(), update.getCallbackQuery().getData().split("_")[3]);
-//            fileService.moveToDirectory(student.orElseThrow(), directory, informationStorage.getFileMetadata(student.orElseThrow().getId()));
-            fileService.moveToDirectory(directory, informationStorage.getFileMetadata(student.orElseThrow().getId()));
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = directoryService.findByTitle(student, update.getCallbackQuery().getData().split("_")[3]);
+//            fileService.moveToDirectory(student, directory, informationStorage.getFileMetadata(student.getId()));
+            fileService.moveToDirectory(directory, informationStorage.getFileMetadata(student.getId()));
 
             setView(messageUtils.generateSendMessageWithCallbackData(update, "Файл успешно перемещен"));
         }
@@ -338,8 +340,8 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void renameFileProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         studentHelperBot.sendEditMessage(messageUtils.editFilesMessageWithChooseButtons(update,
                 "Выберете файл, который хотите переименовать:",
                 fileService.findAll(directory),
@@ -352,11 +354,11 @@ public class CallbackDataController implements UpdateController {
             cancelFromFilesChooseAction(update);
             setUserStates(update, States.ACTIVE);
         } else {
-            Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-            Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+            Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+            Directory directory = informationStorage.getDirectory(student.getId());
             FileMetadata fileMetadata = fileService.findBySerial(directory, Integer.parseInt(update.getCallbackQuery().getData().split("_")[3]));
 
-            informationStorage.putFileMetadata(student.orElseThrow().getId(), fileMetadata);
+            informationStorage.putFileMetadata(student.getId(), fileMetadata);
 
             setView(messageUtils.generateSendMessageLookingForward(update, "Введите новое имя для файла:"));
             setUserStates(update, States.WAITING_FILE_NAME);
@@ -364,19 +366,19 @@ public class CallbackDataController implements UpdateController {
     }
 
     private void cancelFromFilesListProcess(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        studentHelperBot.sendEditMessage(messageUtils.editSendMessageForDirectories(update, directoryService.findAll(student.orElseThrow())));
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        studentHelperBot.sendEditMessage(messageUtils.editSendMessageForDirectories(update, directoryService.findAll(student)));
         setUserStates(update, States.ACTIVE);
     }
 
     private void cancelFromDirectoriesChooseAction(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        studentHelperBot.sendEditMessage(messageUtils.editSendMessageForDirectories(update, directoryService.findAll(student.orElseThrow())));
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        studentHelperBot.sendEditMessage(messageUtils.editSendMessageForDirectories(update, directoryService.findAll(student)));
     }
 
     private void cancelFromFilesChooseAction(Update update) {
-        Optional<Student> student = studentService.findById(update.getCallbackQuery().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         studentHelperBot.sendEditMessage(messageUtils.editSendMessageForFiles(update,
                 fileService.findAll(directory), directory));
     }

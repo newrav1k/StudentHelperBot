@@ -6,6 +6,18 @@ spring:
     hibernate:
       ddl-auto: update
 
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      client-type: lettuce
+
+    jdbc:
+      dialect: postgresql
+
+  cache:
+    type: redis
+
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres

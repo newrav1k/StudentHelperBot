@@ -15,12 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.UnexpectedRollbackException;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
@@ -64,7 +64,8 @@ public class TextController implements UpdateController {
             switch (message) {
                 case START -> {
                     setStartView(update);
-                    studentService.save(update);
+                    Student student = studentService.save(update);
+                    log.info(student.toString());
                 }
                 case HELP -> setHelpView(update);
                 case RESET_STATE -> resetState(update, id);
@@ -90,6 +91,8 @@ public class TextController implements UpdateController {
         } catch (NoSuchElementException exception) {
             studentService.save(update);
             processUpdate(update);
+        } catch (UnexpectedRollbackException ignored) {
+            // student || directory exists
         }
     }
 
@@ -149,9 +152,9 @@ public class TextController implements UpdateController {
     }
 
     private void setShowDirectoriesView(Update update) {
-        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
+        Student student = studentService.findById(update.getMessage().getFrom().getId());
         setView(messageUtils.generateSendMessageForDirectories(update,
-                directoryService.findAll(student.orElseThrow())));
+                directoryService.findAll(student)));
     }
 
     private void convertFile(Update update) {
@@ -160,17 +163,19 @@ public class TextController implements UpdateController {
     }
 
     private void addDirectory(Update update, String message) throws StudentHelperBotException {
-        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
-        directoryService.save(student.orElseThrow(), message);
-        log.info("Пользователь {} создал директорию", student.orElseThrow().getId());
-        setView(messageUtils.generateSendMessageWithText(update,
-                "Директория успешно создана"));
+        Student student = studentService.findById(update.getMessage().getFrom().getId());
+        directoryService.save(student, message);
+        log.info("Пользователь {} создал директорию", student.getId());
+        SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
+                "Директория успешно создана");
+        sendMessage.setReplyMarkup(messageUtils.getMainMenuKeyboard());
+        setView(sendMessage);
         setUserStates(update, States.ACTIVE);
     }
 
     private void renameFile(Update update, String message) {
-        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
-        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getMessage().getFrom().getId());
+        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
 
         fileService.rename(fileMetadata, message);
 //        fileService.rename(student.orElseThrow(), fileMetadata, message);
@@ -180,10 +185,10 @@ public class TextController implements UpdateController {
     }
 
     private void renameDirectory(Update update, String message) {
-        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getMessage().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
 
-        directoryService.rename(student.orElseThrow(), directory, message);
+        directoryService.rename(student, directory, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);

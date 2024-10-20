@@ -94,9 +94,9 @@ public class DocumentController implements UpdateController {
     public void converter(Update update) throws TelegramApiException, IOException, StudentHelperBotException {
         User user = update.getMessage().getFrom();
 
-        Optional<Student> student = studentService.findById(user.getId());
+        Student student = studentService.findById(user.getId());
 
-        Document document = informationStorage.getDocument(student.orElseThrow().getId());
+        Document document = informationStorage.getDocument(student.getId());
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
 
         FileType fileType = FileType.fromString(document.getFileName().split("\\.")[1]);
@@ -120,7 +120,7 @@ public class DocumentController implements UpdateController {
         converter.shutDown();
 
         SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(student.orElseThrow().getId());
+        sendDocument.setChatId(student.getId());
         sendDocument.setDocument(new InputFile(pdfFile));
 
         studentHelperBot.execute(sendDocument);
@@ -129,8 +129,8 @@ public class DocumentController implements UpdateController {
     }
 
     private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
-        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
-        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
+        Student student = studentService.findById(update.getMessage().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.getId());
         Document document = update.getMessage().getDocument();
 
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
