@@ -38,9 +38,9 @@ public class StudentDaoImpl implements StudentDao {
             } catch (NoResultException exception) {
                 directory = Directory.builder().title("Прочее").build();
             }
-            session.saveOrUpdate(directory);
+            session.persist(directory);
             directory.setStudent(student);
-            session.saveOrUpdate(student);
+            session.persist(student);
 
             session.getTransaction().commit();
         }
@@ -60,6 +60,8 @@ public class StudentDaoImpl implements StudentDao {
             session.getTransaction().commit();
         } catch (NoResultException exception) {
             insert(update);
+        } catch (RuntimeException exception) {
+            throw new StudentHelperBotException("Странно, не могу получить информацию о Вас...");
         }
         return student;
     }

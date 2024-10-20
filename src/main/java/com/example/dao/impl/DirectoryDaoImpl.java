@@ -28,7 +28,7 @@ public class DirectoryDaoImpl implements DirectoryDao {
 
             Directory directory = Optional.ofNullable(findByTitle(student, title)).orElse(Directory.builder().title(title).student(user).build());
 
-            session.saveOrUpdate(directory);
+            session.persist(directory);
 
             session.getTransaction().commit();
         } catch (Exception exception) {

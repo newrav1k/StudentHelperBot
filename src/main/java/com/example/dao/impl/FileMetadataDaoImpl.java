@@ -147,25 +147,12 @@ public class FileMetadataDaoImpl implements FileMetadataDao {
         }
     }
 
-    /// java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
-    /// 	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:100) ~[na:na]
-    /// 	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:106) ~[na:na]
-    /// 	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:302) ~[na:na]
-    /// 	at java.base/java.util.Objects.checkIndex(Objects.java:365) ~[na:na]
-    /// 	at java.base/java.util.ArrayList.get(ArrayList.java:428) ~[na:na]
-    /// 	at com.example.dao.impl.FileMetadataDaoImpl.findBySerial(FileMetadataDaoImpl.java:117) ~[classes/:na]
     @Override
     public synchronized FileMetadata findBySerial(Student student, Directory directory, int serial) throws StudentHelperBotException {
         FileMetadata fileMetadata;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             session.beginTransaction();
-            ///java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
-            /// 	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:100) ~[na:na]
-            /// 	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:106) ~[na:na]
-            /// 	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:302) ~[na:na]
-            /// 	at java.base/java.util.Objects.checkIndex(Objects.java:365) ~[na:na]
-            /// 	at java.base/java.util.ArrayList.get(ArrayList.java:428) ~[na:na]
-            /// 	at com.example.dao.impl.FileMetadataDaoImpl.findBySerial(FileMetadataDaoImpl.java:117) ~[classes/:na] ///
+
             fileMetadata = session.createQuery("from FileMetadata where directory.id = :id", FileMetadata.class)
                     .setParameter("id", directory.getId())
                     .getResultList().get(serial - 1);
