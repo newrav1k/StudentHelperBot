@@ -10,10 +10,12 @@ import com.example.entity.Student;
 import com.example.enums.FileType;
 import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
+import com.example.service.DirectoryService;
+import com.example.service.FileService;
+import com.example.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
@@ -22,10 +24,12 @@ import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,6 +37,19 @@ import java.nio.file.Files;
 public class DocumentController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
+
+    private final StudentService studentService;
+
+    private final DirectoryService directoryService;
+
+    private final FileService fileService;
+
+    @Autowired
+    public DocumentController(StudentService studentService, DirectoryService directoryService, FileService fileService) {
+        this.studentService = studentService;
+        this.directoryService = directoryService;
+        this.fileService = fileService;
+    }
 
     @Override
     public void processUpdate(Update update) {
@@ -75,11 +92,11 @@ public class DocumentController implements UpdateController {
     }
 
     public void converter(Update update) throws TelegramApiException, IOException, StudentHelperBotException {
-        log.info("обратился {}", update.getMessage().getFrom().getFirstName());
-        Student student = studentDao.findById(update);
-        log.info("закончил {}", update.getMessage().getFrom().getFirstName());
-        Document document = informationStorage.getDocument(student.getId());
-        log.info("зашёл в метод {}", student.getPersonalInfo());
+        User user = update.getMessage().getFrom();
+
+        Optional<Student> student = studentService.findById(user.getId());
+
+        Document document = informationStorage.getDocument(student.orElseThrow().getId());
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
 
         FileType fileType = FileType.fromString(document.getFileName().split("\\.")[1]);
@@ -96,7 +113,6 @@ public class DocumentController implements UpdateController {
 
         IConverter converter = LocalConverter.builder().build();
 
-        log.info("зашёл и вышел {}", student.getPersonalInfo());
         converter.convert(file).as(fileType.getDocumentType())
                 .to(pdfFile).as(DocumentType.PDF)
                 .execute();
@@ -104,7 +120,7 @@ public class DocumentController implements UpdateController {
         converter.shutDown();
 
         SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(student.getId());
+        sendDocument.setChatId(student.orElseThrow().getId());
         sendDocument.setDocument(new InputFile(pdfFile));
 
         studentHelperBot.execute(sendDocument);
@@ -113,14 +129,14 @@ public class DocumentController implements UpdateController {
     }
 
     private void saveProcess(Update update) throws TelegramApiException, StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
+        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
         Document document = update.getMessage().getDocument();
 
         File execute = studentHelperBot.execute(new GetFile(document.getFileId()));
         java.io.File downloadFile = studentHelperBot.downloadFile(execute);
 
-        fileMetadataDao.insert(update, directory, downloadFile, document);
+        fileService.save(update, directory, downloadFile, document);
         setView(messageUtils.generateSendMessageWithText(update,
                 "Файл успешно сохранён"));
         setUserStates(update, States.ACTIVE);

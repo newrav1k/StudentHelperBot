@@ -7,6 +7,9 @@ import com.example.entity.FileMetadata;
 import com.example.entity.Student;
 import com.example.enums.States;
 import com.example.exception.StudentHelperBotException;
+import com.example.service.DirectoryService;
+import com.example.service.FileService;
+import com.example.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,9 +18,9 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.IOException;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static com.example.controller.StudentHelperBot.DEVELOPERS;
 import static com.example.controller.StudentHelperBot.HELP;
@@ -35,6 +38,19 @@ public class TextController implements UpdateController {
 
     private ApplicationContext context;
 
+    private final StudentService studentService;
+
+    private final DirectoryService directoryService;
+
+    private final FileService fileService;
+
+    @Autowired
+    public TextController(StudentService studentService, DirectoryService directoryService, FileService fileService) {
+        this.studentService = studentService;
+        this.directoryService = directoryService;
+        this.fileService = fileService;
+    }
+
     @Override
     public void processUpdate(Update update) {
         long id = update.getMessage().getFrom().getId();
@@ -42,13 +58,13 @@ public class TextController implements UpdateController {
 
         States states = informationStorage.getState(id);
         try {
-//            Student student = studentDao.findById(update);
+//            Student student = studentService.findById(update);
 //            Update updateForDeleting = informationStorage.getUpdate(student.getId());         //Добавить реализацию добавдения последнего апдейта
 //            deletingInlineKeyboardForCommand(updateForDeleting);
             switch (message) {
                 case START -> {
                     setStartView(update);
-                    studentDao.insert(update);
+                    studentService.save(update);
                 }
                 case HELP -> setHelpView(update);
                 case RESET_STATE -> resetState(update, id);
@@ -71,6 +87,9 @@ public class TextController implements UpdateController {
             }
         } catch (StudentHelperBotException exception) {
             setView(messageUtils.generateSendMessageWithText(update, exception.getMessage()));
+        } catch (NoSuchElementException exception) {
+            studentService.save(update);
+            processUpdate(update);
         }
     }
 
@@ -129,10 +148,10 @@ public class TextController implements UpdateController {
         setView(sendMessage);
     }
 
-    private void setShowDirectoriesView(Update update) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
+    private void setShowDirectoriesView(Update update) {
+        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
         setView(messageUtils.generateSendMessageForDirectories(update,
-                directoryDao.findAll(student)));
+                directoryService.findAll(student.orElseThrow())));
     }
 
     private void convertFile(Update update) {
@@ -141,29 +160,30 @@ public class TextController implements UpdateController {
     }
 
     private void addDirectory(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        directoryDao.insert(student, message);
-        log.info("Пользователь {} создал директорию", student.getId());
+        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
+        directoryService.save(student.orElseThrow(), message);
+        log.info("Пользователь {} создал директорию", student.orElseThrow().getId());
         setView(messageUtils.generateSendMessageWithText(update,
                 "Директория успешно создана"));
         setUserStates(update, States.ACTIVE);
     }
 
-    private void renameFile(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
+    private void renameFile(Update update, String message) {
+        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
+        FileMetadata fileMetadata = informationStorage.getFileMetadata(student.orElseThrow().getId());
 
-        fileMetadataDao.renameFile(student, fileMetadata, message);
+        fileService.rename(fileMetadata, message);
+//        fileService.rename(student.orElseThrow(), fileMetadata, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);
     }
 
-    private void renameDirectory(Update update, String message) throws StudentHelperBotException {
-        Student student = studentDao.findById(update);
-        Directory directory = informationStorage.getDirectory(student.getId());
+    private void renameDirectory(Update update, String message) {
+        Optional<Student> student = studentService.findById(update.getMessage().getFrom().getId());
+        Directory directory = informationStorage.getDirectory(student.orElseThrow().getId());
 
-        directoryDao.renameDirectory(student, directory, message);
+        directoryService.rename(student.orElseThrow(), directory, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);
@@ -174,7 +194,7 @@ public class TextController implements UpdateController {
     }
 
     private void deletingInlineKeyboardForCommand(Update update) {
-        context.getBean(CallbackDataController.class).deleteInlineKeyboard(update);
+        context.getBean("callbackDataController", CallbackDataController.class).deleteInlineKeyboard(update);
     }
 
     @Autowired

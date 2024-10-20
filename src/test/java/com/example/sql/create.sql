@@ -9,7 +9,7 @@ create table directories
 (
     id         bigserial primary key,
     title      varchar(128) not null,
-    student_id bigint references students (id),
+    student_id bigint references students (id) on delete cascade ,
     UNIQUE (title, student_id)
 );
 

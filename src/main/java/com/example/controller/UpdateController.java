@@ -1,11 +1,5 @@
 package com.example.controller;
 
-import com.example.dao.DirectoryDao;
-import com.example.dao.FileMetadataDao;
-import com.example.dao.StudentDao;
-import com.example.dao.impl.DirectoryDaoImpl;
-import com.example.dao.impl.FileMetadataDaoImpl;
-import com.example.dao.impl.StudentDaoImpl;
 import com.example.enums.States;
 import com.example.utils.InformationStorage;
 import com.example.utils.MessageUtils;
@@ -17,12 +11,6 @@ public interface UpdateController {
     InformationStorage informationStorage = new InformationStorage();
 
     MessageUtils messageUtils = new MessageUtils();
-
-    StudentDao studentDao = new StudentDaoImpl();
-
-    DirectoryDao directoryDao = new DirectoryDaoImpl();
-
-    FileMetadataDao fileMetadataDao = new FileMetadataDaoImpl();
 
     void init(StudentHelperBot studentHelperBot);
 

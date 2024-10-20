@@ -3,7 +3,11 @@ package com.example.controller.type;
 import com.example.controller.StudentHelperBot;
 import com.example.controller.UpdateController;
 import com.example.enums.States;
+import com.example.service.DirectoryService;
+import com.example.service.FileService;
+import com.example.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -19,6 +23,19 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public class PhotoController implements UpdateController {
 
     private StudentHelperBot studentHelperBot;
+
+    private final StudentService studentService;
+
+    private final DirectoryService directoryService;
+
+    private final FileService fileService;
+
+    @Autowired
+    public PhotoController(StudentService studentService, DirectoryService directoryService, FileService fileService) {
+        this.studentService = studentService;
+        this.directoryService = directoryService;
+        this.fileService = fileService;
+    }
 
     @Override
     public void processUpdate(Update update) {

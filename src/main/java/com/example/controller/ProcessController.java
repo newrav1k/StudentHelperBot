@@ -19,15 +19,16 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class ProcessController {
 
     private final MessageUtils messageUtils;
+
     private final ApplicationContext applicationContext;
+
     private final InformationStorage informationStorage;
 
     @Autowired
-    public ProcessController(ApplicationContext applicationContext,
-                             MessageUtils messageUtils,
+    public ProcessController(MessageUtils messageUtils, ApplicationContext applicationContext,
                              InformationStorage informationStorage) {
-        this.applicationContext = applicationContext;
         this.messageUtils = messageUtils;
+        this.applicationContext = applicationContext;
         this.informationStorage = informationStorage;
     }
 
@@ -65,22 +66,22 @@ public class ProcessController {
     private void setUnsupportedMessageTypeView(Update update) {
         SendMessage sendMessage = messageUtils.generateSendMessageWithText(update,
                 "Неподдерживаемый тип сообщения!");
-        applicationContext.getBean(TextController.class).setView(sendMessage);
+        applicationContext.getBean("textController", TextController.class).setView(sendMessage);
     }
 
     private void processPhotoMessage(Update update) {
-        applicationContext.getBean(PhotoController.class).processUpdate(update);
+        applicationContext.getBean("photoController", PhotoController.class).processUpdate(update);
     }
 
     private void processDocMessage(Update update) {
-        applicationContext.getBean(DocumentController.class).processUpdate(update);
+        applicationContext.getBean("documentController", DocumentController.class).processUpdate(update);
     }
 
     private void processTextMessage(Update update) {
-        applicationContext.getBean(TextController.class).processUpdate(update);
+        applicationContext.getBean("textController", TextController.class).processUpdate(update);
     }
 
     private void processCallbackDataMessage(Update update) {
-        applicationContext.getBean(CallbackDataController.class).processUpdate(update);
+        applicationContext.getBean("callbackDataController", CallbackDataController.class).processUpdate(update);
     }
 }
