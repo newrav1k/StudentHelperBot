@@ -4,8 +4,6 @@ import com.example.entity.Directory;
 import com.example.entity.Student;
 import com.example.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +21,6 @@ public class DirectoryService {
     }
 
     @Transactional
-    @Cacheable(value = "directories", key = "#student.id")
     public Directory save(Student student, String title) {
         Directory directory = null;
         try {
@@ -38,19 +35,16 @@ public class DirectoryService {
     }
 
     @Transactional
-    @Cacheable(value = "directories", key = "#title")
     public Directory findByTitle(Student student, String title) {
         return directoryRepository.findByStudentAndTitle(student, title);
     }
 
     @Transactional
-    @CachePut(value = "directories", key = "#title")
     public void deleteByTitle(Student student, String title) {
         directoryRepository.deleteByStudentAndTitle(student, title);
     }
 
     @Transactional
-    @CachePut(value = "directories", key = "#newTitle")
     public void rename(Student student, Directory directory, String newTitle) {
         directory.setTitle(newTitle);
         directory.setStudent(student);
