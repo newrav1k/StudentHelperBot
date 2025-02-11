@@ -6,11 +6,7 @@ import com.example.entity.Student;
 import com.example.exception.StudentHelperBotException;
 import com.example.repository.FileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -37,8 +33,7 @@ public class FileService {
         this.studentService = studentService;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Cacheable(value = "files.title", key = "#document.fileName")
+    @Transactional
     public FileMetadata save(Update update, Directory directory, File file, Document document) throws StudentHelperBotException {
         FileMetadata fileMetadata = null;
         try (FileChannel channel = FileChannel.open(Path.of(file.toURI()))) {
@@ -78,19 +73,16 @@ public class FileService {
     }
 
     @Transactional
-    @CacheEvict(value = "files.id", key = "#id")
     public void deleteById(long id) {
         fileRepository.deleteById(id);
     }
 
     @Transactional
-    @CacheEvict(value = "files.title", key = "#title")
     public void deleteByTitle(Directory directory, String title) {
         fileRepository.deleteByDirectoryAndTitle(directory, title);
     }
 
     @Transactional
-    @CachePut(value = "files.title", key = "#newName")
     public void rename(FileMetadata fileMetadata, String newName) {
         fileMetadata.setTitle(newName + "." + fileMetadata.getTitle().split("\\.")[1]);
         fileRepository.save(fileMetadata);
