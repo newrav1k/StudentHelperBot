@@ -58,9 +58,6 @@ public class TextController implements UpdateController {
 
         States states = informationStorage.getState(id);
         try {
-//            Student student = studentService.findById(update);
-//            Update updateForDeleting = informationStorage.getUpdate(student.getId());         //Добавить реализацию добавдения последнего апдейта
-//            deletingInlineKeyboardForCommand(updateForDeleting);
             switch (message) {
                 case START -> {
                     setStartView(update);
@@ -92,7 +89,6 @@ public class TextController implements UpdateController {
             studentService.save(update);
             processUpdate(update);
         } catch (UnexpectedRollbackException ignored) {
-            // student || directory exists
         }
     }
 
@@ -178,7 +174,6 @@ public class TextController implements UpdateController {
         FileMetadata fileMetadata = informationStorage.getFileMetadata(student.getId());
 
         fileService.rename(fileMetadata, message);
-//        fileService.rename(student.orElseThrow(), fileMetadata, message);
 
         setView(messageUtils.generateSendMessageWithText(update, "Новое имя установлено"));
         setUserStates(update, States.ACTIVE);

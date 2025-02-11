@@ -32,7 +32,6 @@ public class DirectoryService {
                     .title(title)
                     .build());
         } catch (DataIntegrityViolationException ignored) {
-            // directory exists
         }
         return directory;
     }

@@ -25,11 +25,11 @@ spring:
     driver-class-name: org.postgresql.Driver
 
 bot:
-  name: newrav1k_bot
-  token: 5523304065:AAHi2fN-lv2pHVnnSPuynThC0c8lsKJXAYA
+#  name: newrav1k_bot
+#  token: 5523304065:AAHi2fN-lv2pHVnnSPuynThC0c8lsKJXAYA
 
-#  name: Dandy_hot_bot
-#  token: 7787120361:AAEVBujNfyqSfp97akvUZowcvINTTqj7k2s
+  name: Dandy_hot_bot
+  token: 7787120361:AAEVBujNfyqSfp97akvUZowcvINTTqj7k2s
 
 logging:
   level:

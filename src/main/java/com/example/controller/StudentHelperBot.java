@@ -43,7 +43,6 @@ public class StudentHelperBot extends TelegramLongPollingBot {
         this.updateController = updateController;
         this.processController = processController;
 
-        // работает, но бот сосёт огромный хуй Айдара
         List<BotCommand> botCommands = new ArrayList<>(Arrays.asList(
                 new BotCommand(START, "Информация о боте"),
                 new BotCommand(UPLOAD_FILE, "Загрузить файл"),

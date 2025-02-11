@@ -330,7 +330,6 @@ public class CallbackDataController implements UpdateController {
         } else {
             Student student = studentService.findById(update.getCallbackQuery().getFrom().getId());
             Directory directory = directoryService.findByTitle(student, update.getCallbackQuery().getData().split("_")[3]);
-//            fileService.moveToDirectory(student, directory, informationStorage.getFileMetadata(student.getId()));
             fileService.moveToDirectory(directory, informationStorage.getFileMetadata(student.getId()));
 
             setView(messageUtils.generateSendMessageWithCallbackData(update, "Файл успешно перемещен"));

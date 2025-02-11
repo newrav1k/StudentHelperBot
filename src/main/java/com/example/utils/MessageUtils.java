@@ -74,7 +74,6 @@ public class MessageUtils {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = actionSelection();
 
-        // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
         CallbackDataController.setInlineKeyboardText(suggestion);
@@ -91,7 +90,6 @@ public class MessageUtils {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getDirectoryRows();
 
-        // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
         String text = "Список директорий из базы данных:\n" + buildDirectoriesList(directories);
@@ -349,7 +347,6 @@ public class MessageUtils {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
 
-        // Устанавливаем кнопки в markup
         markup.setKeyboard(rows);
 
         String text = "Список директорий из базы данных:\n" + buildDirectoriesList(directories);
@@ -360,8 +357,6 @@ public class MessageUtils {
         editMessage.setMessageId(messageId);
         editMessage.setText(text);
         editMessage.setReplyMarkup(markup);
-
-        // Отправляем сообщение
 
         return editMessage;
     }
@@ -509,8 +504,8 @@ public class MessageUtils {
 
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton button1 = new InlineKeyboardButton();
-        button1.setText("Да"); // Текст на кнопке
-        button1.setCallbackData("callback_data_confirmation_yes_" + objectOfConfirmation); // Данные для обратного вызова
+        button1.setText("Да");
+        button1.setCallbackData("callback_data_confirmation_yes_" + objectOfConfirmation);
         row1.add(button1);
 
         InlineKeyboardButton button2 = new InlineKeyboardButton();

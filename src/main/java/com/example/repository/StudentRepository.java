@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.util.List;
+
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
-    @Transactional
+    List<Directory> findAllByDirectoriesEqualsAndPersonalInfoOrderById(Directory directory, PersonalInfo personalInfo);
     default Student save(Update update) {
         Student student = null;
         try {
@@ -33,7 +35,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             student.getDirectories().add(directory);
             saveAndFlush(student);
         } catch (DataIntegrityViolationException | UnexpectedRollbackException ignored) {
-            // student || directory exists
         }
         return student;
     }
